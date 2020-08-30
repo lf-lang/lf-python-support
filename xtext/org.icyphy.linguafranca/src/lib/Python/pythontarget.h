@@ -45,8 +45,8 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PY_SSIZE_T_CLEAN
 
 #include <Python.h>
-#include "core/pqueue.c"
-#include "core/reactor.h"
+#include <structmember.h>
+#include "ctarget.h"
 #include "core/reactor.c"
 
 #ifdef _MSC_VER
@@ -123,14 +123,14 @@ typedef struct {
  */
 static PyObject* py_SET(PyObject *self, PyObject *args)
 {
-    port_instance_object* port;
+    generic_port_instance_struct* port;
     PyObject* val;
 
     if (!PyArg_ParseTuple(args, "OO" ,&port, &val))
         return NULL;
     
     Py_DECREF(port->value);
-    __LF_SET(port, val);
+    _LF_SET(port, val);
     Py_INCREF(port->value);
 
     Py_INCREF(Py_None);
@@ -142,6 +142,9 @@ static PyObject* py_SET(PyObject *self, PyObject *args)
 static PyObject* py_main(PyObject *self, PyObject *args)
 {
     main(1, NULL);
+
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 //////////////////////////////////////////////////////////////
@@ -222,7 +225,7 @@ static PyModuleDef MODULE_NAME = {
 /* 
  * 
  */
-static PyObject* invoke_python_function(string module, string func, PyObject* pArgs)
+static PyObject* invoke_python_function(string module, string class, string func, PyObject* pArgs)
 {
 
     // Set if the interpreter is already initialized
@@ -233,65 +236,115 @@ static PyObject* invoke_python_function(string module, string func, PyObject* pA
         is_initialized = 1;
     }
 
+#ifdef VERBOSE
     printf("Starting the function start()\n");
+#endif
 
     // Necessary PyObject variables to load the react() function from test.py
-    PyObject *pFileName, *pModule, *pFunc;
-    // Argument to react()
-    PyObject *pArgs;
-    // Temporary variable to hold individual arguments
-    PyObject *pValue;
-    
+    PyObject *pFileName, *pModule, *pDict, *pClass, *pFunc;
+
     PyObject *rValue;
-    
-    port_instance_object * pyValue;
 
     // Initialize the Python interpreter
     Py_Initialize();
-    printf("Initialized Python interpreter.\n");
-    //}
+
+#ifdef VERBOSE
+    printf("Initialized the Python interpreter.\n");
+#endif
     
     // Decode the MODULE name into a filesystem compatible string
     pFileName = PyUnicode_DecodeFSDefault(module);
     
-    // Import MODULE from linguafrancatest.py
+    // Set the Python search path to be the current working directory
+    char cwd[PATH_MAX];
+    if( getcwd(cwd, sizeof(cwd)) == NULL)
+    {
+        fprintf(stderr, "Failed to get the current working directory.\n");
+        exit(0);
+    }
+
+    wchar_t wcwd[PATH_MAX];
+
+    mbstowcs(wcwd, cwd, PATH_MAX);
+
+    Py_SetPath(wcwd);
+
+#ifdef VERBOSE
+    printf("Loading module %s in %s.\n", module, cwd);
+#endif
+
     pModule = PyImport_Import(pFileName);
+
+#ifdef VERBOSE
+    printf("Loaded module %p.\n", pModule);
+#endif
 
     // Free the memory occupied by pFileName
     Py_DECREF(pFileName);
 
     // Check if the module was correctly loaded
     if (pModule != NULL) {
+        // Get contents of module. pDict is a borrowed reference.
+        pDict = PyModule_GetDict(pModule);
+        if(pDict == NULL)
+        {
+            PyErr_Print();
+            fprintf(stderr, "Failed to load contents of module %s", module);
+            return 1;
+        }
+
+        // Get the class
+        pClass = PyDict_GetItemString(pDict, class);
+        if(pClass == NULL){
+            PyErr_Print();
+            fprintf(stderr, "Failed to load class %s in module %s", class, module);
+            return 1;
+        }
+
+        //Py_DECREF(pDict);
+
+#ifdef VERBOSE
+        printf("Loading function %s.\n", func);
+#endif
         // Get the function react from test.py
-        pFunc = PyObject_GetAttrString(pModule, func);
+        pFunc = PyObject_GetAttrString(pClass, func);
+
+#ifdef VERBOSE
+        printf("Loaded function %p.\n", pFunc);
+#endif
+
 
         // Check if the funciton is loaded properly
         // and if it is callable
         if (pFunc && PyCallable_Check(pFunc))
         {
-
-            int a_number = 420;
-            
-            printf("Attempting to call function react.\n");
+#ifdef VERBOSE
+            printf("Attempting to call function.\n");
+#endif
 
 
             // Call the func() function with arguments pArgs
             // The output will be returned to rValue
             rValue = PyObject_CallObject(pFunc, pArgs);
 
+#ifdef VERBOSE
+                printf("Finished calling %s.\n", func);
+#endif
+
             // Check if the function is executed correctly
             if (rValue != NULL)
             {
-                printf("I called %s and got %ld.\n", FUNC_NAME , PyLong_AsLong(rValue));
+#ifdef VERBOSE
+                printf("I called %s and got %ld.\n", func , PyLong_AsLong(rValue));
+#endif
                 Py_DECREF(rValue);
             }
             else {
                 // If the function call fails, print an error
                 // message and get rid of the PyObjects
                 Py_DECREF(pFunc);
-                Py_DECREF(pValue);
-                Py_DECREF(pyValue);
                 Py_DECREF(pModule);
+                Py_DECREF(pClass);
                 PyErr_Print();
                 fprintf(stderr, "Calling react failed.\n");
                 exit(0);
@@ -299,9 +352,7 @@ static PyObject* invoke_python_function(string module, string func, PyObject* pA
 
 
             // Free pArgs (or rather decrement its reference count)
-            // Py_DECREF(pValue);
-            // Py_DECREF(pyValue);
-            Py_DECREF(pArgs);
+            //Py_DECREF(pArgs);
         }
         else
         {
@@ -310,17 +361,19 @@ static PyObject* invoke_python_function(string module, string func, PyObject* pA
             {
                 PyErr_Print();
             }
-            fprintf(stderr, "Function %s was not found or is not callable.\n", FUNC_NAME);
+            fprintf(stderr, "Function %s was not found or is not callable.\n", func);
         }
         Py_XDECREF(pFunc);
         Py_DECREF(pModule); 
     }
     else {
         PyErr_Print();
-        fprintf(stderr, "Failed to load \"%s\"\n", MODULE);
+        fprintf(stderr, "Failed to load \"%s\"\n", module);
     }
     
+#ifdef VERBOSE
     printf("Done with start()\n");
+#endif
 
     if(is_initialized == 0)
     {
