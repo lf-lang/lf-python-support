@@ -76,6 +76,18 @@ PyObject *globalPythonModule = NULL;
 // class objects from
 PyObject *globalPythonModuleDict = NULL;
 
+#ifdef FEDERATED
+#ifdef FEDERATED_DECENTRALIZED
+#define FEDERATED_CAPSULE_EXTENSION \
+    tag_t intended_tag; \
+    instant_t physical_time_of_arrival;
+#else // FEDERATED_CENTRALIZED
+#define FEDERATED_CAPSULE_EXTENSION \
+    instant_t physical_time_of_arrival;
+#endif // FEDERATED_DECENTRALIZED
+#else  // not FEDERATED
+#define FEDERATED_CAPSULE_EXTENSION // Empty
+#endif // FEDERATED
 
 /**
  * The struct used to instantiate a port
@@ -94,7 +106,34 @@ typedef struct {
     PyObject* value;
     bool is_present;
     int num_destinations;
+    FEDERATED_CAPSULE_EXTENSION
 } generic_port_instance_struct;
+
+/**
+ * Special version of the template_input_output_port_struct
+ * for dynamic arrays.
+ * FIXME: This is currently kept for compatibility reasons
+ * and should be removed soon.
+ **/
+typedef struct {
+    PyObject_HEAD
+    PyObject* value;
+    bool is_present;
+    int num_destinations;
+    lf_token_t* token;
+    int length;
+    FEDERATED_CAPSULE_EXTENSION
+} generic_port_instance_with_token_struct;
+
+
+typedef struct {
+    trigger_t* trigger;
+    PyObject* value;
+    bool is_present;
+    bool has_value;
+    lf_token_t* token;
+    FEDERATED_CAPSULE_EXTENSION
+} generic_action_instance_struct;
 
 /**
  * The struct used to represent ports in Python 
@@ -125,22 +164,8 @@ typedef struct {
     bool is_present;
     int width;
     int current_index;
+    FEDERATED_CAPSULE_EXTENSION
 } generic_port_capsule_struct;
-
-/**
- * Special version of the template_input_output_port_struct
- * for dynamic arrays.
- * FIXME: This is currently kept for compatibility reasons
- * and should be removed soon.
- **/
-typedef struct {
-    PyObject_HEAD
-    PyObject* value;
-    bool is_present;
-    int num_destinations;
-    lf_token_t* token;
-    int length;
-} generic_port_instance_with_token_struct;
 
 
 /**
@@ -166,6 +191,7 @@ typedef struct {
                       // will be stored in a PyCapsule. @see https://docs.python.org/3/c-api/capsule.html
     PyObject* value; // This value will be copied from the C action->value
     bool is_present; // Same as value, is_present will be copied from the C action->is_present
+    FEDERATED_CAPSULE_EXTENSION
 } generic_action_capsule_struct;
 
 //////////////////////////////////////////////////////////////
