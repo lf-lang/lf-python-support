@@ -91,10 +91,10 @@ PyObject *globalPythonModuleDict = NULL;
 
 /**
  * The struct used to instantiate a port
- * in Lingua Franca. This template is used 
+ * in Lingua Franca. This is used 
  * in the PythonGenerator instead of redefining
  * a struct for each port.
- * This template can be used for any Python object,
+ * This can be used for any Python object,
  * including lists and tuples.
  * PyObject* value: the value of the port with the generic Python type
  * is_present: indicates if the value of the port is present
@@ -126,6 +126,17 @@ typedef struct {
 } generic_port_instance_with_token_struct;
 
 
+/**
+ * The struct used to instantiate an action.
+ * This is used 
+ * in the PythonGenerator instead of redefining
+ * a struct for each action.
+ * This can be used for any Python object,
+ * including lists and tuples.
+ * PyObject* value: the value of the action with the generic Python type
+ * is_present: indicates if the action is present
+ *             at the current logical time
+ **/
 typedef struct {
     trigger_t* trigger;
     PyObject* value;
