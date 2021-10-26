@@ -76,6 +76,10 @@ PyObject *globalPythonModule = NULL;
 // class objects from
 PyObject *globalPythonModuleDict = NULL;
 
+
+// Import pickle to enable native serialization
+static PyObject* global_pickler = NULL;
+
 #ifdef FEDERATED
 #ifdef FEDERATED_DECENTRALIZED
 #define FEDERATED_CAPSULE_EXTENSION \
@@ -360,8 +364,6 @@ PyObject* convert_C_action_to_py(void* action);
  */
 PyObject*
 get_python_function(string module, string class, int instance_id, string func);
-
-
 
 /*
  * The Python runtime will call this function to initialize the module.
