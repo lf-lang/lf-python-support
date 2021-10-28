@@ -247,12 +247,91 @@ static PyObject* py_request_stop(PyObject *self) {
     return Py_None;
 }
 
+/**
+ * Parse Python's 'argv' (from sys.argv()) into a pair of C-style 
+ * 'argc' (the size of command-line parameters array) 
+ * and 'argv' (an array of char* containing the command-line parameters).
+ * 
+ * This function assumes that argc is already allocated, and will fail if it
+ * isn't.
+ * 
+ * @param py_argv The returned value by 'sys.argv()'
+ * @param argc Will contain an integer which is the number of arguments
+ *  passed on the command line.
+ * @return A list of char*, where each item contains an individual
+ *  command-line argument.
+ */
+char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
+    if (argc == NULL) {
+        error_print_and_exit("_lf_py_parse_argv_impl called with an unallocated argc argument.");
+    }
+
+    // List of arguments
+    char** argv;
+
+    // Read the optional argvs
+    PyObject* py_argv_parsed;
+
+    if (!PyArg_ParseTuple(py_argv, "|O", &py_argv_parsed)) {
+        PyErr_SetString(PyExc_TypeError, "Could not get argvs.");
+        return NULL;
+    }
+
+    if (py_argv_parsed == NULL) {
+        // Build a generic argv with just one argument, which
+        // is the module name.
+        *argc = 1;
+        argv = malloc(2);
+        argv[0] = TOSTRING(MODULE_NAME);
+        argv[1] = NULL;
+        return;
+    }
+
+    Py_ssize_t argv_size = PyList_Size(py_argv_parsed);
+    argv = malloc(argv_size);
+    for (Py_ssize_t i=0; i<argv_size; i++) {
+        PyObject* list_item = PyList_GetItem(py_argv_parsed, i);
+        if (list_item == NULL) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            error_print_and_exit("Could not get argv list item %u.", i);
+        }
+
+        PyObject *encoded_string = PyUnicode_AsEncodedString(list_item, "UTF-8", "strict");
+        if (encoded_string == NULL) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            error_print_and_exit("Failed to encode argv list item %u.", i);
+        }
+
+        argv[i] = PyBytes_AsString(encoded_string);
+
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+            error_print_and_exit("Could not convert argv list item %u to char*.", i);
+        }
+
+        *argc = argv_size;
+    }
+    return argv;
+}
 
 //////////////////////////////////////////////////////////////
 ///////////// Main function callable from Python code
-static PyObject* py_main(PyObject *self, PyObject *args) {
+/**
+ * The main function of this Python module.
+ * 
+ * @param py_args A single object, which should be a list
+ *  of arguments taken from sys.argv().
+ */
+static PyObject* py_main(PyObject* self, PyObject* py_args) {
+
     DEBUG_PRINT("Initializing main.");
-    const char *argv[] = {TOSTRING(MODULE_NAME), NULL };
+
+    size_t argc;
+    char** argv = _lf_py_parse_argv_impl(py_args, &argc);
 
     // Initialize the Python interpreter
     Py_Initialize();
@@ -260,7 +339,7 @@ static PyObject* py_main(PyObject *self, PyObject *args) {
     DEBUG_PRINT("Initialized the Python interpreter.");
 
     Py_BEGIN_ALLOW_THREADS
-    lf_reactor_c_main(1, argv);
+    lf_reactor_c_main(argc, argv);
     Py_END_ALLOW_THREADS
 
     Py_INCREF(Py_None);
@@ -1092,8 +1171,7 @@ get_python_function(string module, string class, int instance_id, string func) {
         }
         else {
             // Function is not found or it is not callable
-            if (PyErr_Occurred())
-            {
+            if (PyErr_Occurred()) {
                 PyErr_Print();
             }
             error_print("Function %s was not found or is not callable.", func);
