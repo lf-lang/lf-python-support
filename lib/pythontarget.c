@@ -990,6 +990,17 @@ get_python_function(string module, string class, int instance_id, string func) {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
+    // Load the pickle module
+    if (global_pickler == NULL) {
+        global_pickler = PyImport_ImportModule("pickle");
+        if (global_pickler == NULL) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            error_print_and_exit("Failed to load the module 'pickle'.");
+        }
+    }
+
     // If the Python module is already loaded, skip this.
     if (globalPythonModule == NULL) {    
         // Decode the MODULE name into a filesystem compatible string
@@ -1089,8 +1100,7 @@ get_python_function(string module, string class, int instance_id, string func) {
         }
         Py_XDECREF(pFunc);
         Py_DECREF(globalPythonModule); 
-    }
-    else {
+    } else {
         PyErr_Print();
         error_print("Failed to load \"%s\".", module);
     }
