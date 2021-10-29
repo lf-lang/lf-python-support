@@ -284,7 +284,7 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
         argv = malloc(2);
         argv[0] = TOSTRING(MODULE_NAME);
         argv[1] = NULL;
-        return;
+        return argv;
     }
 
     Py_ssize_t argv_size = PyList_Size(py_argv_parsed);
