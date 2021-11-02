@@ -397,12 +397,13 @@ port_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 /**
- * The iterator function that can be useful to implement iterator features for multiports.
+ * Return an iterator for self, which is a port.
+ * This function just have to exist to tell Python that ports are iterable.
+ * 
  * For example to make
  *     for p in foo_multiport:
  *         p.set(42)
  * possible in Python.
- * FIXME: Incomplete iterator
  */
 static PyObject *
 port_iter(PyObject *self) {
@@ -414,7 +415,8 @@ port_iter(PyObject *self) {
 
 /**
  * The function that is responsible for getting the next item in the iterator for a multiport.
- * This would make the following code possible:
+ * 
+ * This would make the following code possible in the Python target:
  *     for p in foo_multiport:
  *         p.set(42)
  */
