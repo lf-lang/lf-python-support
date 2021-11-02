@@ -4,6 +4,7 @@
  *
  * @section LICENSE
 Copyright (c) 2020, The University of California at Berkeley.
+Copyright (c) 2021, The University of Texas at Dallas.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -405,48 +406,55 @@ port_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
  */
 static PyObject *
 port_iter(PyObject *self) {
+  generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
+  port->current_index = 0;
+  Py_INCREF(self);
+  return self;
+}
+
+/**
+ * The function that is responsible for getting the next item in the iterator for a multiport.
+ * This would make the following code possible:
+ *     for p in foo_multiport:
+ *         p.set(42)
+ */
+static PyObject *
+port_iter_next(PyObject *self) {
     generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
     generic_port_capsule_struct* pyport = (generic_port_capsule_struct*)self->ob_type->tp_new(self->ob_type, NULL, NULL);
-    long long index = port->current_index;
 
-    if (port->current_index == port->width) {
-        port->current_index = 0;
-        return NULL;
-    }
-
-    if (port->width == -2) {
+    if (port->width < 1) {
         PyErr_Format(PyExc_TypeError,
                 "Non-multiport type is not iteratable.");
         return NULL;
     }
 
-    generic_port_instance_struct **cport = (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
-    if (cport == NULL) {
-        error_print("Null pointer received.");
-        exit(1);
+    if (port->current_index >= port->width) {
+        port->current_index = 0;
+        return NULL;
     }
 
-    //Py_INCREF(cport[index]->value);
-    pyport->port = PyCapsule_New(cport[index], "port", NULL);
-    pyport->value = cport[index]->value;
-    pyport->is_present = cport[index]->is_present;
+    generic_port_instance_struct **cport = 
+        (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
+    if (cport == NULL) {
+        error_print_and_exit("Null pointer received.");
+    }
+
+    // Py_XINCREF(cport[index]->value);
+    pyport->port = PyCapsule_New(cport[port->current_index], "port", NULL);
+    pyport->value = cport[port->current_index]->value;
+    pyport->is_present = cport[port->current_index]->is_present;
+    pyport->width = -2;
 
     port->current_index++;
 
-    Py_INCREF(pyport);
+    if (pyport->value == NULL) {
+        Py_INCREF(Py_None);
+        pyport->value = Py_None;
+    }
+
+    Py_XINCREF(pyport);
     return pyport;
-}
-
-/**
- * The function that is responsible for getting the next iterator for a multiport.
- * This would make the following code possible:
- *     for p in foo_multiport:
- *         p.set(42)
- * FIXME: incomplete iterator next
- */
-static PyObject *
-port_iter_next(PyObject *self) {
-
 }
 /**
  * Get an item from a Linugua Franca port capsule type.
@@ -489,7 +497,7 @@ port_capsule_get_item(PyObject *self, PyObject *item) {
             error_print_and_exit("Null pointer received.");
         }
 
-        //Py_INCREF(cport[index]->value);
+        // Py_INCREF(cport[index]->value);
         pyport->port = PyCapsule_New(cport[index], "port", NULL);
         pyport->value = cport[index]->value;
         pyport->is_present = cport[index]->is_present;
@@ -506,7 +514,7 @@ port_capsule_get_item(PyObject *self, PyObject *item) {
     }
 
     //Py_INCREF(((generic_port_capsule_struct*)port)->value);
-    Py_INCREF(pyport);
+    Py_XINCREF(pyport);
     //Py_INCREF(self);
     return pyport;
 }

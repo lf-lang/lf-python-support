@@ -5,6 +5,7 @@
  *
  * @section LICENSE
 Copyright (c) 2020, The University of California at Berkeley.
+Copyright (c) 2021, The University of Texas at Dallas.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -178,7 +179,7 @@ typedef struct {
     PyObject* value;
     bool is_present;
     int width;
-    int current_index;
+    long current_index;
     FEDERATED_CAPSULE_EXTENSION
 } generic_port_capsule_struct;
 
