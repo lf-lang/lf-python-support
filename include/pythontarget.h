@@ -237,6 +237,11 @@ static PyObject* py_get_logical_time(PyObject *self, PyObject *args);
 /** 
  * Return the elapsed physical time in nanoseconds.
  */
+static PyObject* py_get_microstep(PyObject *self, PyObject *args);
+
+/** 
+ * Return the elapsed physical time in nanoseconds.
+ */
 static PyObject* py_get_physical_time(PyObject *self, PyObject *args);
 
 /** 

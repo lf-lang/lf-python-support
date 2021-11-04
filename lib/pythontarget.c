@@ -207,6 +207,14 @@ static PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
 /** 
  * Return the elapsed physical time in nanoseconds.
  */
+static PyObject* py_get_microstep(PyObject *self, PyObject *args) {
+    return PyLong_FromUnsignedLong(get_microstep());
+}
+
+
+/** 
+ * Return the elapsed physical time in nanoseconds.
+ */
 static PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(get_physical_time());
 }
@@ -733,6 +741,7 @@ static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
   {"get_elapsed_logical_time", py_get_elapsed_logical_time, METH_NOARGS, NULL},
   {"get_logical_time", py_get_logical_time, METH_NOARGS, NULL},
+  {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
   {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
   {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
   {"get_start_time", py_get_start_time, METH_NOARGS, NULL},
