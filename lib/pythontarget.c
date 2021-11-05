@@ -205,6 +205,37 @@ static PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
 }
 
 /** 
+ * Return the current tag object.
+ */
+static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
+    py_tag_t *t = (py_tag_t *) PyType_GenericNew(&TagType, NULL, NULL);
+    if (t == NULL) {
+        return NULL;
+    }
+    t->tag = get_current_tag();
+    return (PyObject *) t;
+}
+
+
+/**
+ * Initialize the Tag object with the given values for "time" and "microstep", 
+ * both of which are required.
+ * @param self A py_tag_t object.
+ * @param args The arguments are:
+ *      @param time A logical time.
+ *      @param microstep A microstep within the logical time "time".
+ */
+static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"time", "microstep", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist,
+                                     &(self->tag.time), &(self->tag.microstep)))
+        return -1;
+    return 0;
+}
+
+
+/** 
  * Return the elapsed physical time in nanoseconds.
  */
 static PyObject* py_get_microstep(PyObject *self, PyObject *args) {
@@ -720,6 +751,53 @@ static PyTypeObject action_capsule_t = {
 };
 
 
+//// Tag /////
+/**
+ * Link names to getter functions.
+ * Getters are used when the variable name specified are referenced with a ".".
+ * For example:
+ * >>> t = Tag(time=1, microstep=2)
+ * >>> t.time   # calls Tag_get_time.
+ * >>> t.microstep  # calls Tag_get_microstep.
+ * >>> t.time = 1  # illegal since setters are omitted.
+ **/
+static PyGetSetDef Tag_getsetters[] = {
+    {"time", (getter) Tag_get_time},
+    {"microstep", (getter) Tag_get_microstep},
+    {NULL}  /* Sentinel */
+};
+
+/**
+ * Definition of the TagType Object. 
+ **/
+PyTypeObject TagType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "LinguaFranca.Tag",
+    .tp_doc = "Tag object",
+    .tp_basicsize = sizeof(py_tag_t),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+    .tp_init = (initproc) Tag_init,
+    .tp_getset = Tag_getsetters,
+};
+
+/**
+ * Tag getter for the "time" attribute
+ **/
+static PyObject* Tag_get_time(py_tag_t *self, void *closure)
+{
+    return PyLong_FromLongLong(self->tag.time);
+}
+
+/**
+ * Tag getter for the "microstep" attribute
+ **/
+static PyObject* Tag_get_microstep(py_tag_t *self, void *closure)
+{
+    return PyLong_FromUnsignedLong(self->tag.microstep);
+}
+
 ///// Python Module Built-ins
 /**
  * Bind Python function names to the C functions.
@@ -741,6 +819,7 @@ static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
   {"get_elapsed_logical_time", py_get_elapsed_logical_time, METH_NOARGS, NULL},
   {"get_logical_time", py_get_logical_time, METH_NOARGS, NULL},
+  {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
   {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
   {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
   {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
@@ -792,6 +871,11 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
         return NULL;
     }
 
+    // Initialize the Tag type
+    if (PyType_Ready(&TagType) < 0) {
+        return NULL;
+    }
+
     m = PyModule_Create(&MODULE_NAME);
 
     if (m == NULL) {
@@ -818,6 +902,14 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
     Py_INCREF(&action_capsule_t);
     if (PyModule_AddObject(m, "action_capsule_t", (PyObject *) &action_capsule_t) < 0) {
         Py_DECREF(&action_capsule_t);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    // Add the Tag type to the module's dictionary
+    Py_INCREF(&TagType);
+    if (PyModule_AddObject(m, "Tag", (PyObject *) &TagType) < 0) {
+        Py_DECREF(&TagType);
         Py_DECREF(m);
         return NULL;
     }

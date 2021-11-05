@@ -142,6 +142,26 @@ typedef struct {
     int length;
 } generic_port_instance_with_token_struct;
 
+/**
+ * Python wrapper for the tag_t struct in the C target.
+ **/
+typedef struct {
+    PyObject_HEAD
+    tag_t tag;
+} py_tag_t;
+
+PyTypeObject TagType;
+
+/**
+ * Tag getter for the "time" attribute
+ **/
+static PyObject* Tag_get_time(py_tag_t *self, void *closure);
+
+/**
+ * Tag getter for the "microstep" attribute
+ **/
+static PyObject* Tag_get_microstep(py_tag_t *self, void *closure);
+
 
 /**
  * The struct used to hold an action
@@ -233,6 +253,24 @@ static PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args);
  * Return the elapsed physical time in nanoseconds.
  */
 static PyObject* py_get_logical_time(PyObject *self, PyObject *args);
+
+
+/** 
+ * Return the current tag object.
+ */
+static PyObject* py_get_current_tag(PyObject *self, PyObject *args);
+
+/**
+ * Compare two tags. Return -1 if the first is less than
+ * the second, 0 if they are equal, and +1 if the first is
+ * greater than the second. A tag is greater than another if
+ * its time is greater or if its time is equal and its microstep
+ * is greater.
+ * @param tag1
+ * @param tag2
+ * @return -1, 0, or 1 depending on the relation.
+ */
+static PyObject* py_compare_tags(PyObject *self, PyObject *args);
 
 /** 
  * Return the elapsed physical time in nanoseconds.
@@ -326,10 +364,7 @@ PyObject* convert_C_action_to_py(void* action);
  * @param func The reaction functino to be called
  * @param pArgs the PyList of arguments to be sent to function func()
  */
-PyObject*
-get_python_function(string module, string class, int instance_id, string func);
-
-
+PyObject* get_python_function(string module, string class, int instance_id, string func);
 
 /*
  * The Python runtime will call this function to initialize the module.
