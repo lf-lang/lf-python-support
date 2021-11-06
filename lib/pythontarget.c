@@ -4,6 +4,7 @@
  *
  * @section LICENSE
 Copyright (c) 2020, The University of California at Berkeley.
+Copyright (c) 2021, The University of Texas at Dallas.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -294,12 +295,91 @@ static PyObject* py_request_stop(PyObject *self) {
     return Py_None;
 }
 
+/**
+ * Parse Python's 'argv' (from sys.argv()) into a pair of C-style 
+ * 'argc' (the size of command-line parameters array) 
+ * and 'argv' (an array of char* containing the command-line parameters).
+ * 
+ * This function assumes that argc is already allocated, and will fail if it
+ * isn't.
+ * 
+ * @param py_argv The returned value by 'sys.argv()'
+ * @param argc Will contain an integer which is the number of arguments
+ *  passed on the command line.
+ * @return A list of char*, where each item contains an individual
+ *  command-line argument.
+ */
+char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
+    if (argc == NULL) {
+        error_print_and_exit("_lf_py_parse_argv_impl called with an unallocated argc argument.");
+    }
+
+    // List of arguments
+    char** argv;
+
+    // Read the optional argvs
+    PyObject* py_argv_parsed;
+
+    if (!PyArg_ParseTuple(py_argv, "|O", &py_argv_parsed)) {
+        PyErr_SetString(PyExc_TypeError, "Could not get argvs.");
+        return NULL;
+    }
+
+    if (py_argv_parsed == NULL) {
+        // Build a generic argv with just one argument, which
+        // is the module name.
+        *argc = 1;
+        argv = malloc(2);
+        argv[0] = TOSTRING(MODULE_NAME);
+        argv[1] = NULL;
+        return argv;
+    }
+
+    Py_ssize_t argv_size = PyList_Size(py_argv_parsed);
+    argv = malloc(argv_size);
+    for (Py_ssize_t i=0; i<argv_size; i++) {
+        PyObject* list_item = PyList_GetItem(py_argv_parsed, i);
+        if (list_item == NULL) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            error_print_and_exit("Could not get argv list item %u.", i);
+        }
+
+        PyObject *encoded_string = PyUnicode_AsEncodedString(list_item, "UTF-8", "strict");
+        if (encoded_string == NULL) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            error_print_and_exit("Failed to encode argv list item %u.", i);
+        }
+
+        argv[i] = PyBytes_AsString(encoded_string);
+
+        if (PyErr_Occurred()) {
+            PyErr_Print();
+            error_print_and_exit("Could not convert argv list item %u to char*.", i);
+        }
+
+        *argc = argv_size;
+    }
+    return argv;
+}
 
 //////////////////////////////////////////////////////////////
 ///////////// Main function callable from Python code
-static PyObject* py_main(PyObject *self, PyObject *args) {
+/**
+ * The main function of this Python module.
+ * 
+ * @param py_args A single object, which should be a list
+ *  of arguments taken from sys.argv().
+ */
+static PyObject* py_main(PyObject* self, PyObject* py_args) {
+
     DEBUG_PRINT("Initializing main.");
-    const char *argv[] = {TOSTRING(MODULE_NAME), NULL };
+
+    size_t argc;
+    char** argv = _lf_py_parse_argv_impl(py_args, &argc);
 
     // Initialize the Python interpreter
     Py_Initialize();
@@ -307,7 +387,7 @@ static PyObject* py_main(PyObject *self, PyObject *args) {
     DEBUG_PRINT("Initialized the Python interpreter.");
 
     Py_BEGIN_ALLOW_THREADS
-    lf_reactor_c_main(1, argv);
+    lf_reactor_c_main(argc, argv);
     Py_END_ALLOW_THREADS
 
     Py_INCREF(Py_None);
@@ -364,57 +444,66 @@ port_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
 }
 
 /**
- * The iterator function that can be useful to implement iterator features for multiports.
+ * Return an iterator for self, which is a port.
+ * This function just have to exist to tell Python that ports are iterable.
+ * 
  * For example to make
  *     for p in foo_multiport:
  *         p.set(42)
  * possible in Python.
- * FIXME: Incomplete iterator
  */
 static PyObject *
 port_iter(PyObject *self) {
+  generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
+  port->current_index = 0;
+  Py_INCREF(self);
+  return self;
+}
+
+/**
+ * The function that is responsible for getting the next item in the iterator for a multiport.
+ * 
+ * This would make the following code possible in the Python target:
+ *     for p in foo_multiport:
+ *         p.set(42)
+ */
+static PyObject *
+port_iter_next(PyObject *self) {
     generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
     generic_port_capsule_struct* pyport = (generic_port_capsule_struct*)self->ob_type->tp_new(self->ob_type, NULL, NULL);
-    long long index = port->current_index;
 
-    if (port->current_index == port->width) {
-        port->current_index = 0;
-        return NULL;
-    }
-
-    if (port->width == -2) {
+    if (port->width < 1) {
         PyErr_Format(PyExc_TypeError,
                 "Non-multiport type is not iteratable.");
         return NULL;
     }
 
-    generic_port_instance_struct **cport = (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
-    if (cport == NULL) {
-        error_print("Null pointer received.");
-        exit(1);
+    if (port->current_index >= port->width) {
+        port->current_index = 0;
+        return NULL;
     }
 
-    //Py_INCREF(cport[index]->value);
-    pyport->port = PyCapsule_New(cport[index], "port", NULL);
-    pyport->value = cport[index]->value;
-    pyport->is_present = cport[index]->is_present;
+    generic_port_instance_struct **cport = 
+        (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
+    if (cport == NULL) {
+        error_print_and_exit("Null pointer received.");
+    }
+
+    // Py_XINCREF(cport[index]->value);
+    pyport->port = PyCapsule_New(cport[port->current_index], "port", NULL);
+    pyport->value = cport[port->current_index]->value;
+    pyport->is_present = cport[port->current_index]->is_present;
+    pyport->width = -2;
 
     port->current_index++;
 
-    Py_INCREF(pyport);
+    if (pyport->value == NULL) {
+        Py_INCREF(Py_None);
+        pyport->value = Py_None;
+    }
+
+    Py_XINCREF(pyport);
     return pyport;
-}
-
-/**
- * The function that is responsible for getting the next iterator for a multiport.
- * This would make the following code possible:
- *     for p in foo_multiport:
- *         p.set(42)
- * FIXME: incomplete iterator next
- */
-static PyObject *
-port_iter_next(PyObject *self) {
-
 }
 /**
  * Get an item from a Linugua Franca port capsule type.
@@ -457,7 +546,7 @@ port_capsule_get_item(PyObject *self, PyObject *item) {
             error_print_and_exit("Null pointer received.");
         }
 
-        //Py_INCREF(cport[index]->value);
+        // Py_INCREF(cport[index]->value);
         pyport->port = PyCapsule_New(cport[index], "port", NULL);
         pyport->value = cport[index]->value;
         pyport->is_present = cport[index]->is_present;
@@ -474,7 +563,7 @@ port_capsule_get_item(PyObject *self, PyObject *item) {
     }
 
     //Py_INCREF(((generic_port_capsule_struct*)port)->value);
-    Py_INCREF(pyport);
+    Py_XINCREF(pyport);
     //Py_INCREF(self);
     return pyport;
 }
@@ -1118,6 +1207,17 @@ get_python_function(string module, string class, int instance_id, string func) {
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
+    // Load the pickle module
+    if (global_pickler == NULL) {
+        global_pickler = PyImport_ImportModule("pickle");
+        if (global_pickler == NULL) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            error_print_and_exit("Failed to load the module 'pickle'.");
+        }
+    }
+
     // If the Python module is already loaded, skip this.
     if (globalPythonModule == NULL) {    
         // Decode the MODULE name into a filesystem compatible string
@@ -1209,16 +1309,14 @@ get_python_function(string module, string class, int instance_id, string func) {
         }
         else {
             // Function is not found or it is not callable
-            if (PyErr_Occurred())
-            {
+            if (PyErr_Occurred()) {
                 PyErr_Print();
             }
             error_print("Function %s was not found or is not callable.", func);
         }
         Py_XDECREF(pFunc);
         Py_DECREF(globalPythonModule); 
-    }
-    else {
+    } else {
         PyErr_Print();
         error_print("Failed to load \"%s\".", module);
     }
