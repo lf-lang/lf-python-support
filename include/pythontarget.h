@@ -162,6 +162,17 @@ static PyObject* Tag_get_time(py_tag_t *self, void *closure);
  **/
 static PyObject* Tag_get_microstep(py_tag_t *self, void *closure);
 
+/**
+ * Initialize the Tag object with the given values for "time" and "microstep", 
+ * both of which are required.
+ * same as __init__()
+ * 
+ * @param self A py_tag_t object.
+ * @param args The arguments are:
+ *      @param time A logical time.
+ *      @param microstep A microstep within the logical time "time".
+ */
+static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds);
 
 /**
  * The struct used to hold an action

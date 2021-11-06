@@ -216,22 +216,30 @@ static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
     return (PyObject *) t;
 }
 
-
 /**
- * Initialize the Tag object with the given values for "time" and "microstep", 
- * both of which are required.
- * @param self A py_tag_t object.
- * @param args The arguments are:
- *      @param time A logical time.
- *      @param microstep A microstep within the logical time "time".
+ * Compare two tags. Return -1 if the first is less than
+ * the second, 0 if they are equal, and +1 if the first is
+ * greater than the second. A tag is greater than another if
+ * its time is greater or if its time is equal and its microstep
+ * is greater.
+ * @param tag1
+ * @param tag2
+ * @return -1, 0, or 1 depending on the relation.
  */
-static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {"time", "microstep", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist,
-                                     &(self->tag.time), &(self->tag.microstep)))
-        return -1;
-    return 0;
+static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
+    PyObject *tag1;
+    PyObject *tag2;
+    if (!PyArg_UnpackTuple(args, "args", 2, 2, &tag1, &tag2)) {
+        return NULL;
+    } 
+    if (!PyObject_IsInstance(tag1, (PyObject *) &TagType) 
+     || !PyObject_IsInstance(tag2, (PyObject *) &TagType)) {
+        PyErr_SetString(PyExc_TypeError, "Arguments must be Tag type.");
+        return NULL;
+    }
+    tag_t tag1_v = ((py_tag_t *) tag1)->tag;
+    tag_t tag2_v = ((py_tag_t *) tag2)->tag;
+    return PyLong_FromLong(compare_tags(tag1_v, tag2_v));
 }
 
 
@@ -618,7 +626,6 @@ action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObjec
         Py_XDECREF(tmp);
     }
 
-
     if (value) {
         tmp = self->value;
         Py_INCREF(value);
@@ -626,6 +633,25 @@ action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObjec
         Py_XDECREF(tmp);
     }
 
+    return 0;
+}
+
+
+///////////////// Functions used in Tag creation, initialization and deletion /////////////
+/**
+ * Initialize the Tag object with the given values for "time" and "microstep", 
+ * both of which are required.
+ * @param self A py_tag_t object.
+ * @param args The arguments are:
+ *      @param time A logical time.
+ *      @param microstep A microstep within the logical time "time".
+ */
+static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"time", "microstep", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist,
+                                     &(self->tag.time), &(self->tag.microstep)))
+        return -1;
     return 0;
 }
 
@@ -821,6 +847,7 @@ static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"get_logical_time", py_get_logical_time, METH_NOARGS, NULL},
   {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
   {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
+  {"compare_tags", py_compare_tags, METH_VARARGS, NULL},
   {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
   {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
   {"get_start_time", py_get_start_time, METH_NOARGS, NULL},
