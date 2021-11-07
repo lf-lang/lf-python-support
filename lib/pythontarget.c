@@ -745,6 +745,45 @@ static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
     return 0;
 }
 
+/**
+ * Rich compare function for Tag objects. Used in .tp_richcompare.
+ * 
+ * @param self A py_tag_t object on the left side of the operator.
+ * @param other A py_tag_t object on the right side of the operator.
+ * @param op the comparison operator
+ */
+static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
+    if (!PyObject_IsInstance(other, (PyObject *) &TagType)) {
+        PyErr_SetString(PyExc_TypeError, "Cannot compare a Tag with a non-Tag type.");
+        return NULL;
+    }
+
+    tag_t other_tag = ((py_tag_t *) other)->tag;
+    int c = -1;
+    if (op == Py_LT) {
+        c = (compare_tags(self->tag, other_tag) < 0);
+    } else if (op == Py_LE) {
+        c = (compare_tags(self->tag, other_tag) <= 0);
+    } else if (op == Py_EQ) {
+        c = (compare_tags(self->tag, other_tag) == 0);
+    } else if (op == Py_NE) {
+        c = (compare_tags(self->tag, other_tag) != 0);
+    } else if (op == Py_GT) {
+        c = (compare_tags(self->tag, other_tag) > 0);
+    } else if (op == Py_GE) {
+        c = (compare_tags(self->tag, other_tag) >= 0);
+    }
+    if (c < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Invalid comparator (This statement should never be reaached). ");
+        return NULL;
+    } else if (c) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
+}
+
+
 //////////////////////////////////////////////////////////////
 /////////////  Python Structs
 
@@ -895,6 +934,7 @@ PyTypeObject TagType = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
     .tp_init = (initproc) Tag_init,
+    .tp_richcompare = (richcmpfunc) Tag_richcompare,
     .tp_getset = Tag_getsetters,
 };
 

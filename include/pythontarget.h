@@ -214,6 +214,15 @@ static PyObject* Tag_get_microstep(py_tag_t *self, void *closure);
 static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds);
 
 /**
+ * Rich compare function for Tag objects. Used in .tp_richcompare.
+ * 
+ * @param self A py_tag_t object on the left side of the operator.
+ * @param other A py_tag_t object on the right side of the operator.
+ * @param op the comparison operator
+ */
+static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op);
+
+/**
  * The struct used to hold an action
  * that is sent to a Python reaction.
  * 
