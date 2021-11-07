@@ -774,7 +774,7 @@ static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
         c = (compare_tags(self->tag, other_tag) >= 0);
     }
     if (c < 0) {
-        PyErr_SetString(PyExc_RuntimeError, "Invalid comparator (This statement should never be reaached). ");
+        PyErr_SetString(PyExc_RuntimeError, "Invalid comparator (This statement should never be reached). ");
         return NULL;
     } else if (c) {
         Py_RETURN_TRUE;
