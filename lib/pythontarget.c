@@ -63,7 +63,7 @@ PyTypeObject TagType;
  * @param self The output port (by name) or input of a contained
  *                 reactor in form instance_name.port_name.
  * @param args contains:
- *      @param val The value to insert into the port struct.
+ *      - val: The value to insert into the port struct.
  */
 static PyObject* py_SET(PyObject *self, PyObject *args) {
     generic_port_capsule_struct* p = (generic_port_capsule_struct*)self;
@@ -120,8 +120,8 @@ trigger_t* _lf_action_to_trigger(void* action);
  * See schedule_token(), which this uses, for details.
  * @param self Pointer to the calling object.
  * @param args contains:
- *      @param action Pointer to an action on the self struct.
- *      @param offset The time offset over and above that in the action.
+ *      - action: Pointer to an action on the self struct.
+ *      - offset: The time offset over and above that in the action.
  **/
 static PyObject* py_schedule(PyObject *self, PyObject *args) {
     generic_action_capsule_struct* act = (generic_action_capsule_struct*)self;
@@ -421,12 +421,12 @@ port_capsule_dealloc(generic_port_capsule_struct *self) {
  * current_index = 0, width = -2.
  * @param type The Python type object. In this case, port_capsule_t
  * @param args The optional arguments that are:
- *      @param port A capsule that holds a void* to the underlying C port
- *      @param value value of the port
- *      @param is_present An indication of whether or not the value of the port
+ *      - port: A capsule that holds a void* to the underlying C port
+ *      - value: value of the port
+ *      - is_present: An indication of whether or not the value of the port
  *                       is present at the current logical time.
- *      @param current_index Used to reference multiports in the iterator
- *      @param width Used to indicate the width of a multiport. If the port
+ *      - current_index: Used to reference multiports in the iterator
+ *      - width: Used to indicate the width of a multiport. If the port
  *                   is not a multiport, this field will be -2.
  * @param kwds Keywords (@see Python keywords)
  */
@@ -614,12 +614,12 @@ static PyMappingMethods port_as_mapping = {
  * @param self The port_instance PyObject that follows
  *              the generic_port_instance_struct* internal structure
  * @param args The optional arguments that are:
- *      @param port A capsule that holds a void* to the underlying C port
- *      @param value value of the port
- *      @param is_present An indication of whether or not the value of the port
+ *      - port: A capsule that holds a void* to the underlying C port
+ *      - value: value of the port
+ *      - is_present: An indication of whether or not the value of the port
  *                       is present at the current logical time.
- *      @param current_index Used to reference multiports in the iterator
- *      @param width Used to indicate the width of a multiport. If the port
+ *      - current_index: Used to reference multiports in the iterator
+ *      - width: Used to indicate the width of a multiport. If the port
  *                   is not a multiport, this field will be -2.
  */
 static int
@@ -694,11 +694,11 @@ action_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
  * @param self The port_instance PyObject that follows
  *              the generic_port_instance_struct* internal structure
  * @param args The optional arguments that are:
- *      @param action The void * pointer to a C action instance struct
- *      @param value value of the port
- *      @param is_present An indication of whether or not the value of the port
+ *      - action: The void * pointer to a C action instance struct
+ *      - value: value of the port
+ *      - is_present: An indication of whether or not the value of the port
  *                      is present at the current logical time.
- *      @param num_destination Used for reference-keeping inside the C runtime
+ *      - num_destination: Used for reference-keeping inside the C runtime
  */
 static int
 action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObject *kwds) {
@@ -734,8 +734,8 @@ action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObjec
  * both of which are required.
  * @param self A py_tag_t object.
  * @param args The arguments are:
- *      @param time A logical time.
- *      @param microstep A microstep within the logical time "time".
+ *      - time: A logical time.
+ *      - microstep: A microstep within the logical time "time".
  */
 static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
     static char *kwlist[] = {"time", "microstep", NULL};

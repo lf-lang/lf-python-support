@@ -208,8 +208,8 @@ static PyObject* Tag_get_microstep(py_tag_t *self, void *closure);
  * 
  * @param self A py_tag_t object.
  * @param args The arguments are:
- *      @param time A logical time.
- *      @param microstep A microstep within the logical time "time".
+ *      - time: A logical time.
+ *      - microstep: A microstep within the logical time "time".
  */
 static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds);
 
@@ -268,7 +268,7 @@ typedef struct {
  * @param self The output port (by name) or input of a contained
  *                 reactor in form input_name.port_name.
  * @param args contains:
- *      @param val The value to insert into the port struct.
+ *      - val: The value to insert into the port struct.
  */
 static PyObject* py_SET(PyObject *self, PyObject *args);
 
@@ -280,8 +280,8 @@ static PyObject* py_SET(PyObject *self, PyObject *args);
  * See schedule_token(), which this uses, for details.
  * @param self Pointer to the calling object.
  * @param args contains:
- *      @param action Pointer to an action on the self struct.
- *      @param offset The time offset over and above that in the action.
+ *      - action: Pointer to an action on the self struct.
+ *      - offset: The time offset over and above that in the action.
  **/
 static PyObject* py_schedule(PyObject *self, PyObject *args);
 
