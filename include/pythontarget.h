@@ -307,7 +307,7 @@ static PyObject* py_get_logical_time(PyObject *self, PyObject *args);
 
 
 /** 
- * Return the current tag object.
+ * Return the current tag as a Tag object.
  */
 static PyObject* py_get_current_tag(PyObject *self, PyObject *args);
 
