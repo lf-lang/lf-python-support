@@ -183,6 +183,44 @@ typedef struct {
     FEDERATED_CAPSULE_EXTENSION
 } generic_port_capsule_struct;
 
+/**
+ * Python wrapper for the tag_t struct in the C target.
+ **/
+typedef struct {
+    PyObject_HEAD
+    tag_t tag;
+} py_tag_t;
+
+/**
+ * Tag getter for the "time" attribute
+ **/
+static PyObject* Tag_get_time(py_tag_t *self, void *closure);
+
+/**
+ * Tag getter for the "microstep" attribute
+ **/
+static PyObject* Tag_get_microstep(py_tag_t *self, void *closure);
+
+/**
+ * Initialize the Tag object with the given values for "time" and "microstep", 
+ * both of which are required.
+ * same as __init__()
+ * 
+ * @param self A py_tag_t object.
+ * @param args The arguments are:
+ *      - time: A logical time.
+ *      - microstep: A microstep within the logical time "time".
+ */
+static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds);
+
+/**
+ * Rich compare function for Tag objects. Used in .tp_richcompare.
+ * 
+ * @param self A py_tag_t object on the left side of the operator.
+ * @param other A py_tag_t object on the right side of the operator.
+ * @param op the comparison operator
+ */
+static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op);
 
 /**
  * The struct used to hold an action
@@ -239,7 +277,7 @@ typedef struct {
  * @param self The output port (by name) or input of a contained
  *                 reactor in form input_name.port_name.
  * @param args contains:
- *      @param val The value to insert into the port struct.
+ *      - val: The value to insert into the port struct.
  */
 static PyObject* py_SET(PyObject *self, PyObject *args);
 
@@ -251,8 +289,8 @@ static PyObject* py_SET(PyObject *self, PyObject *args);
  * See schedule_token(), which this uses, for details.
  * @param self Pointer to the calling object.
  * @param args contains:
- *      @param action Pointer to an action on the self struct.
- *      @param offset The time offset over and above that in the action.
+ *      - action: Pointer to an action on the self struct.
+ *      - offset: The time offset over and above that in the action.
  **/
 static PyObject* py_schedule(PyObject *self, PyObject *args);
 
@@ -275,6 +313,29 @@ static PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args);
  * Return the elapsed physical time in nanoseconds.
  */
 static PyObject* py_get_logical_time(PyObject *self, PyObject *args);
+
+
+/** 
+ * Return the current tag as a Tag object.
+ */
+static PyObject* py_get_current_tag(PyObject *self, PyObject *args);
+
+/**
+ * Compare two tags. Return -1 if the first is less than
+ * the second, 0 if they are equal, and +1 if the first is
+ * greater than the second. A tag is greater than another if
+ * its time is greater or if its time is equal and its microstep
+ * is greater.
+ * @param tag1
+ * @param tag2
+ * @return -1, 0, or 1 depending on the relation.
+ */
+static PyObject* py_compare_tags(PyObject *self, PyObject *args);
+
+/**
+ * Return the current microstep.
+ */
+static PyObject* py_get_microstep(PyObject *self, PyObject *args);
 
 /** 
  * Return the elapsed physical time in nanoseconds.
@@ -363,8 +424,8 @@ PyObject* convert_C_action_to_py(void* action);
  * @param func The reaction functino to be called
  * @param pArgs the PyList of arguments to be sent to function func()
  */
-PyObject*
-get_python_function(string module, string class, int instance_id, string func);
+PyObject* get_python_function(string module, string class, int instance_id, string func);
+
 
 /*
  * The Python runtime will call this function to initialize the module.

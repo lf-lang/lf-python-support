@@ -34,6 +34,8 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "core/util.h"
 #include "core/tag.h"
 
+PyTypeObject TagType;
+
 //////////// set Function(s) /////////////
 /**
  * Set the value and is_present field of self which is of type
@@ -61,7 +63,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * @param self The output port (by name) or input of a contained
  *                 reactor in form instance_name.port_name.
  * @param args contains:
- *      @param val The value to insert into the port struct.
+ *      - val: The value to insert into the port struct.
  */
 static PyObject* py_SET(PyObject *self, PyObject *args) {
     generic_port_capsule_struct* p = (generic_port_capsule_struct*)self;
@@ -118,8 +120,8 @@ trigger_t* _lf_action_to_trigger(void* action);
  * See schedule_token(), which this uses, for details.
  * @param self Pointer to the calling object.
  * @param args contains:
- *      @param action Pointer to an action on the self struct.
- *      @param offset The time offset over and above that in the action.
+ *      - action: Pointer to an action on the self struct.
+ *      - offset: The time offset over and above that in the action.
  **/
 static PyObject* py_schedule(PyObject *self, PyObject *args) {
     generic_action_capsule_struct* act = (generic_action_capsule_struct*)self;
@@ -206,6 +208,53 @@ static PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
 }
 
 /** 
+ * Return the current tag object.
+ */
+static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
+    py_tag_t *t = (py_tag_t *) PyType_GenericNew(&TagType, NULL, NULL);
+    if (t == NULL) {
+        return NULL;
+    }
+    t->tag = get_current_tag();
+    return (PyObject *) t;
+}
+
+/**
+ * Compare two tags. Return -1 if the first is less than
+ * the second, 0 if they are equal, and +1 if the first is
+ * greater than the second. A tag is greater than another if
+ * its time is greater or if its time is equal and its microstep
+ * is greater.
+ * @param tag1
+ * @param tag2
+ * @return -1, 0, or 1 depending on the relation.
+ */
+static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
+    PyObject *tag1;
+    PyObject *tag2;
+    if (!PyArg_UnpackTuple(args, "args", 2, 2, &tag1, &tag2)) {
+        return NULL;
+    } 
+    if (!PyObject_IsInstance(tag1, (PyObject *) &TagType) 
+     || !PyObject_IsInstance(tag2, (PyObject *) &TagType)) {
+        PyErr_SetString(PyExc_TypeError, "Arguments must be Tag type.");
+        return NULL;
+    }
+    tag_t tag1_v = ((py_tag_t *) tag1)->tag;
+    tag_t tag2_v = ((py_tag_t *) tag2)->tag;
+    return PyLong_FromLong(compare_tags(tag1_v, tag2_v));
+}
+
+
+/**
+ * Return the current microstep.
+ */
+static PyObject* py_get_microstep(PyObject *self, PyObject *args) {
+    return PyLong_FromUnsignedLong(get_microstep());
+}
+
+
+/** 
  * Return the elapsed physical time in nanoseconds.
  */
 static PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
@@ -271,7 +320,7 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
     char** argv;
 
     // Read the optional argvs
-    PyObject* py_argv_parsed;
+    PyObject* py_argv_parsed = NULL;
 
     if (!PyArg_ParseTuple(py_argv, "|O", &py_argv_parsed)) {
         PyErr_SetString(PyExc_TypeError, "Could not get argvs.");
@@ -372,12 +421,12 @@ port_capsule_dealloc(generic_port_capsule_struct *self) {
  * current_index = 0, width = -2.
  * @param type The Python type object. In this case, port_capsule_t
  * @param args The optional arguments that are:
- *      @param port A capsule that holds a void* to the underlying C port
- *      @param value value of the port
- *      @param is_present An indication of whether or not the value of the port
+ *      - port: A capsule that holds a void* to the underlying C port
+ *      - value: value of the port
+ *      - is_present: An indication of whether or not the value of the port
  *                       is present at the current logical time.
- *      @param current_index Used to reference multiports in the iterator
- *      @param width Used to indicate the width of a multiport. If the port
+ *      - current_index: Used to reference multiports in the iterator
+ *      - width: Used to indicate the width of a multiport. If the port
  *                   is not a multiport, this field will be -2.
  * @param kwds Keywords (@see Python keywords)
  */
@@ -565,12 +614,12 @@ static PyMappingMethods port_as_mapping = {
  * @param self The port_instance PyObject that follows
  *              the generic_port_instance_struct* internal structure
  * @param args The optional arguments that are:
- *      @param port A capsule that holds a void* to the underlying C port
- *      @param value value of the port
- *      @param is_present An indication of whether or not the value of the port
+ *      - port: A capsule that holds a void* to the underlying C port
+ *      - value: value of the port
+ *      - is_present: An indication of whether or not the value of the port
  *                       is present at the current logical time.
- *      @param current_index Used to reference multiports in the iterator
- *      @param width Used to indicate the width of a multiport. If the port
+ *      - current_index: Used to reference multiports in the iterator
+ *      - width: Used to indicate the width of a multiport. If the port
  *                   is not a multiport, this field will be -2.
  */
 static int
@@ -645,11 +694,11 @@ action_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
  * @param self The port_instance PyObject that follows
  *              the generic_port_instance_struct* internal structure
  * @param args The optional arguments that are:
- *      @param action The void * pointer to a C action instance struct
- *      @param value value of the port
- *      @param is_present An indication of whether or not the value of the port
+ *      - action: The void * pointer to a C action instance struct
+ *      - value: value of the port
+ *      - is_present: An indication of whether or not the value of the port
  *                      is present at the current logical time.
- *      @param num_destination Used for reference-keeping inside the C runtime
+ *      - num_destination: Used for reference-keeping inside the C runtime
  */
 static int
 action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObject *kwds) {
@@ -668,7 +717,6 @@ action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObjec
         Py_XDECREF(tmp);
     }
 
-
     if (value) {
         tmp = self->value;
         Py_INCREF(value);
@@ -678,6 +726,63 @@ action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObjec
 
     return 0;
 }
+
+
+///////////////// Functions used in Tag creation, initialization and deletion /////////////
+/**
+ * Initialize the Tag object with the given values for "time" and "microstep", 
+ * both of which are required.
+ * @param self A py_tag_t object.
+ * @param args The arguments are:
+ *      - time: A logical time.
+ *      - microstep: A microstep within the logical time "time".
+ */
+static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
+    static char *kwlist[] = {"time", "microstep", NULL};
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist, &(self->tag.time), &(self->tag.microstep))) {
+        return -1;
+    }
+    return 0;
+}
+
+/**
+ * Rich compare function for Tag objects. Used in .tp_richcompare.
+ * 
+ * @param self A py_tag_t object on the left side of the operator.
+ * @param other A py_tag_t object on the right side of the operator.
+ * @param op the comparison operator
+ */
+static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
+    if (!PyObject_IsInstance(other, (PyObject *) &TagType)) {
+        PyErr_SetString(PyExc_TypeError, "Cannot compare a Tag with a non-Tag type.");
+        return NULL;
+    }
+
+    tag_t other_tag = ((py_tag_t *) other)->tag;
+    int c = -1;
+    if (op == Py_LT) {
+        c = (compare_tags(self->tag, other_tag) < 0);
+    } else if (op == Py_LE) {
+        c = (compare_tags(self->tag, other_tag) <= 0);
+    } else if (op == Py_EQ) {
+        c = (compare_tags(self->tag, other_tag) == 0);
+    } else if (op == Py_NE) {
+        c = (compare_tags(self->tag, other_tag) != 0);
+    } else if (op == Py_GT) {
+        c = (compare_tags(self->tag, other_tag) > 0);
+    } else if (op == Py_GE) {
+        c = (compare_tags(self->tag, other_tag) >= 0);
+    }
+    if (c < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Invalid comparator (This statement should never be reaached). ");
+        return NULL;
+    } else if (c) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
+}
+
 
 //////////////////////////////////////////////////////////////
 /////////////  Python Structs
@@ -801,6 +906,52 @@ static PyTypeObject action_capsule_t = {
 };
 
 
+//// Tag /////
+/**
+ * Link names to getter functions.
+ * Getters are used when the variable name specified are referenced with a ".".
+ * For example:
+ * >>> t = Tag(time=1, microstep=2)
+ * >>> t.time   # calls Tag_get_time.
+ * >>> t.microstep  # calls Tag_get_microstep.
+ * >>> t.time = 1  # illegal since setters are omitted.
+ **/
+static PyGetSetDef Tag_getsetters[] = {
+    {"time", (getter) Tag_get_time},
+    {"microstep", (getter) Tag_get_microstep},
+    {NULL}  /* Sentinel */
+};
+
+/**
+ * Definition of the TagType Object. 
+ **/
+PyTypeObject TagType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "LinguaFranca.Tag",
+    .tp_doc = "Tag object",
+    .tp_basicsize = sizeof(py_tag_t),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+    .tp_init = (initproc) Tag_init,
+    .tp_richcompare = (richcmpfunc) Tag_richcompare,
+    .tp_getset = Tag_getsetters,
+};
+
+/**
+ * Tag getter for the "time" attribute
+ **/
+static PyObject* Tag_get_time(py_tag_t *self, void *closure) {
+    return PyLong_FromLongLong(self->tag.time);
+}
+
+/**
+ * Tag getter for the "microstep" attribute
+ **/
+static PyObject* Tag_get_microstep(py_tag_t *self, void *closure) {
+    return PyLong_FromUnsignedLong(self->tag.microstep);
+}
+
 ///// Python Module Built-ins
 /**
  * Bind Python function names to the C functions.
@@ -822,6 +973,9 @@ static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
   {"get_elapsed_logical_time", py_get_elapsed_logical_time, METH_NOARGS, NULL},
   {"get_logical_time", py_get_logical_time, METH_NOARGS, NULL},
+  {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
+  {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
+  {"compare_tags", py_compare_tags, METH_VARARGS, NULL},
   {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
   {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
   {"get_start_time", py_get_start_time, METH_NOARGS, NULL},
@@ -872,6 +1026,11 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
         return NULL;
     }
 
+    // Initialize the Tag type
+    if (PyType_Ready(&TagType) < 0) {
+        return NULL;
+    }
+
     m = PyModule_Create(&MODULE_NAME);
 
     if (m == NULL) {
@@ -898,6 +1057,14 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
     Py_INCREF(&action_capsule_t);
     if (PyModule_AddObject(m, "action_capsule_t", (PyObject *) &action_capsule_t) < 0) {
         Py_DECREF(&action_capsule_t);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    // Add the Tag type to the module's dictionary
+    Py_INCREF(&TagType);
+    if (PyModule_AddObject(m, "Tag", (PyObject *) &TagType) < 0) {
+        Py_DECREF(&TagType);
         Py_DECREF(m);
         return NULL;
     }
