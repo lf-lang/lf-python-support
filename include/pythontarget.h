@@ -323,8 +323,8 @@ static PyObject* py_get_current_tag(PyObject *self, PyObject *args);
  */
 static PyObject* py_compare_tags(PyObject *self, PyObject *args);
 
-/** 
- * Return the elapsed physical time in nanoseconds.
+/**
+ * Return the current microstep.
  */
 static PyObject* py_get_microstep(PyObject *self, PyObject *args);
 

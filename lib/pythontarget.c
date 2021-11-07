@@ -246,8 +246,8 @@ static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
 }
 
 
-/** 
- * Return the elapsed physical time in nanoseconds.
+/**
+ * Return the current microstep.
  */
 static PyObject* py_get_microstep(PyObject *self, PyObject *args) {
     return PyLong_FromUnsignedLong(get_microstep());
@@ -739,9 +739,9 @@ action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObjec
  */
 static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
     static char *kwlist[] = {"time", "microstep", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist,
-                                     &(self->tag.time), &(self->tag.microstep)))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist, &(self->tag.time), &(self->tag.microstep))) {
         return -1;
+    }
     return 0;
 }
 
