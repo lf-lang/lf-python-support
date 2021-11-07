@@ -34,6 +34,8 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "core/util.h"
 #include "core/tag.h"
 
+PyTypeObject TagType;
+
 //////////// set Function(s) /////////////
 /**
  * Set the value and is_present field of self which is of type
@@ -735,8 +737,7 @@ action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObjec
  *      @param time A logical time.
  *      @param microstep A microstep within the logical time "time".
  */
-static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds)
-{
+static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
     static char *kwlist[] = {"time", "microstep", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist,
                                      &(self->tag.time), &(self->tag.microstep)))
@@ -900,16 +901,14 @@ PyTypeObject TagType = {
 /**
  * Tag getter for the "time" attribute
  **/
-static PyObject* Tag_get_time(py_tag_t *self, void *closure)
-{
+static PyObject* Tag_get_time(py_tag_t *self, void *closure) {
     return PyLong_FromLongLong(self->tag.time);
 }
 
 /**
  * Tag getter for the "microstep" attribute
  **/
-static PyObject* Tag_get_microstep(py_tag_t *self, void *closure)
-{
+static PyObject* Tag_get_microstep(py_tag_t *self, void *closure) {
     return PyLong_FromUnsignedLong(self->tag.microstep);
 }
 
