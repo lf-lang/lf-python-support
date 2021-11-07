@@ -320,7 +320,7 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
     char** argv;
 
     // Read the optional argvs
-    PyObject* py_argv_parsed;
+    PyObject* py_argv_parsed = NULL;
 
     if (!PyArg_ParseTuple(py_argv, "|O", &py_argv_parsed)) {
         PyErr_SetString(PyExc_TypeError, "Could not get argvs.");
