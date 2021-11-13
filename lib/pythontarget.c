@@ -67,7 +67,7 @@ PyTypeObject TagType;
  */
 static PyObject* py_SET(PyObject *self, PyObject *args) {
     generic_port_capsule_struct* p = (generic_port_capsule_struct*)self;
-    PyObject* val, *tmp;
+    PyObject* val = NULL;
 
     if (!PyArg_ParseTuple(args, "O", &val)) {
         PyErr_SetString(PyExc_TypeError, "Could not set objects.");
@@ -82,8 +82,8 @@ static PyObject* py_SET(PyObject *self, PyObject *args) {
     }
     
     if (val) {
-        DEBUG_PRINT("Setting value %p.", port->value);
-        tmp = port->value;
+        DEBUG_PRINT("Setting value %p.", val);
+        Py_XDECREF(port->value);
         Py_INCREF(val);
         // Call the core lib API to set the port
         _LF_SET(port, val);
@@ -290,7 +290,7 @@ void request_stop();
 /**
  * Stop execution at the conclusion of the current logical time.
  */
-static PyObject* py_request_stop(PyObject *self) {
+static PyObject* py_request_stop(PyObject *self, PyObject *args) {
     request_stop();
     
     Py_INCREF(Py_None);
@@ -505,7 +505,7 @@ port_iter_next(PyObject *self) {
     }
 
     Py_XINCREF(pyport);
-    return pyport;
+    return (PyObject*)pyport;
 }
 /**
  * Get an item from a Linugua Franca port capsule type.
@@ -567,7 +567,7 @@ port_capsule_get_item(PyObject *self, PyObject *item) {
     //Py_INCREF(((generic_port_capsule_struct*)port)->value);
     Py_XINCREF(pyport);
     //Py_INCREF(self);
-    return pyport;
+    return (PyObject*)pyport;
 }
 
 /**
@@ -582,7 +582,7 @@ port_capsule_assign_get_item(PyObject *self, PyObject *item, PyObject* value) {
     PyErr_Format(PyExc_TypeError,
                      "You cannot assign to ports directly. Please use the .set method.",
                      Py_TYPE(item)->tp_name);
-    return NULL;
+    return -1;
 }
 
 /**
@@ -797,11 +797,11 @@ static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
  * width indicates the width of a multiport or -2 if not a multiport.
  */
 static PyMemberDef port_capsule_members[] = {
-    {"port", T_OBJECT, offsetof(generic_port_capsule_struct, port), 0, ""},
-    {"value", T_OBJECT, offsetof(generic_port_capsule_struct, value), 0, "Value of the port"},
-    {"is_present", T_BOOL, offsetof(generic_port_capsule_struct, is_present), 0, "Check if value is present at current logical time"},
-    {"width", T_INT, offsetof(generic_port_capsule_struct, width), 0, ""},    
-    {NULL, NULL, 0, NULL}  /* Sentinel */
+    {"port", T_OBJECT, offsetof(generic_port_capsule_struct, port), READONLY, ""},
+    {"value", T_OBJECT, offsetof(generic_port_capsule_struct, value), READONLY, "Value of the port"},
+    {"is_present", T_BOOL, offsetof(generic_port_capsule_struct, is_present), READONLY, "Check if value is present at current logical time"},
+    {"width", T_INT, offsetof(generic_port_capsule_struct, width), READONLY, "Width of the multiport"},    
+    {NULL}  /* Sentinel */
 };
 
 /*
@@ -1109,7 +1109,7 @@ PyObject* convert_C_port_to_py(void* port, int width) {
     }
     // Create the port struct in Python
     PyObject* cap = 
-        PyObject_GC_New(generic_port_capsule_struct, &port_capsule_t);
+        (PyObject*)PyObject_GC_New(generic_port_capsule_struct, &port_capsule_t);
     if (cap == NULL) {
         error_print_and_exit("Failed to convert port.");
     }
@@ -1175,7 +1175,7 @@ PyObject* convert_C_action_to_py(void* action) {
     trigger_t* trigger = _lf_action_to_trigger(action);
 
     // Create the action struct in Python
-    PyObject* cap = PyObject_GC_New(generic_action_capsule_struct, &action_capsule_t);
+    PyObject* cap = (PyObject*)PyObject_GC_New(generic_action_capsule_struct, &action_capsule_t);
     if (cap == NULL) {
         error_print_and_exit("Failed to convert action.");
     }
@@ -1226,15 +1226,19 @@ PyObject* convert_C_action_to_py(void* action) {
  * @param instance_id The element number in the list of classes. class[instance_id] points to a class instance
  * @param func The reaction functino to be called
  * @param pArgs the PyList of arguments to be sent to function func()
+ * @return The function or NULL on error.
  */
 PyObject*
 get_python_function(string module, string class, int instance_id, string func) {
     DEBUG_PRINT("Starting the function start().");
 
     // Necessary PyObject variables to load the react() function from test.py
-    PyObject *pFileName, *pModule, *pDict, *pClasses, *pClass, *pFunc;
-
-    PyObject *rValue;
+    PyObject* pFileName = NULL;
+    PyObject* pModule = NULL;
+    PyObject* pDict = NULL;
+    PyObject* pClasses = NULL;
+    PyObject* pClass = NULL;
+    PyObject* pFunc = NULL;
 
     // According to
     // https://docs.python.org/3/c-api/init.html#non-python-created-threads
@@ -1292,7 +1296,7 @@ get_python_function(string module, string class, int instance_id, string func) {
                 error_print("Failed to load contents of module %s.", module);
                 /* Release the thread. No Python API allowed beyond this point. */
                 PyGILState_Release(gstate);
-                return 1;
+                return NULL;
             }
 
             Py_INCREF(pModule);
@@ -1316,7 +1320,7 @@ get_python_function(string module, string class, int instance_id, string func) {
             error_print("Failed to load class list \"%s\" in module %s.", class, module);
             /* Release the thread. No Python API allowed beyond this point. */
             PyGILState_Release(gstate);
-            return 1;
+            return NULL;
         }
 
         Py_DECREF(globalPythonModuleDict);
@@ -1327,7 +1331,7 @@ get_python_function(string module, string class, int instance_id, string func) {
             error_print("Failed to load class \"%s[%d]\" in module %s.", class, instance_id, module);
             /* Release the thread. No Python API allowed beyond this point. */
             PyGILState_Release(gstate);
-            return 1;
+            return NULL;
         }
 
         DEBUG_PRINT("Loading function %s.", func);
