@@ -59,7 +59,7 @@ PyTypeObject TagType;
  * 
  * The port type given in the Lingua Franca is only used as a "suggestion"
  * as per Python's duck typing principles. The end-user is responsible for
- * appropriately handling types on the recieveing end of this port.
+ * appropriately handling types on the receiving end of this port.
  * @param self The output port (by name) or input of a contained
  *                 reactor in form instance_name.port_name.
  * @param args contains:
@@ -86,6 +86,8 @@ static PyObject* py_SET(PyObject *self, PyObject *args) {
         tmp = port->value;
         Py_INCREF(val);
         // Call the core lib API to set the port
+        int _lf_worker_number = 0;  // Only one thread should exist due to the GIL.
+                                    // _LF_SET requires this value.
         _LF_SET(port, val);
 
         Py_INCREF(val);

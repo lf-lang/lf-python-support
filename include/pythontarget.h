@@ -109,6 +109,8 @@ static PyObject* global_pickler = NULL;
  **/
 typedef struct {
     PyObject* value;
+    trigger_t** triggers;
+    size_t triggers_size;
     bool is_present;
     int num_destinations;
     FEDERATED_CAPSULE_EXTENSION
@@ -123,6 +125,8 @@ typedef struct {
 typedef struct {
     PyObject_HEAD
     PyObject* value;
+    trigger_t** triggers;
+    size_t triggers_size;
     bool is_present;
     int num_destinations;
     lf_token_t* token;
@@ -145,6 +149,8 @@ typedef struct {
 typedef struct {
     trigger_t* trigger;
     PyObject* value;
+    trigger_t** triggers;
+    size_t triggers_size;
     bool is_present;
     bool has_value;
     lf_token_t* token;
@@ -177,6 +183,8 @@ typedef struct {
     PyObject_HEAD
     PyObject* port;
     PyObject* value;
+    trigger_t** triggers;
+    size_t triggers_size;
     bool is_present;
     int width;
     long current_index;
@@ -244,6 +252,8 @@ typedef struct {
                       // to Python is considered unsafe practice. Instead, this void* pointer to the C action
                       // will be stored in a PyCapsule. @see https://docs.python.org/3/c-api/capsule.html
     PyObject* value; // This value will be copied from the C action->value
+    trigger_t** triggers;
+    size_t triggers_size;
     bool is_present; // Same as value, is_present will be copied from the C action->is_present
     FEDERATED_CAPSULE_EXTENSION
 } generic_action_capsule_struct;
