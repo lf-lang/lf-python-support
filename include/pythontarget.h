@@ -109,8 +109,7 @@ static PyObject* global_pickler = NULL;
  **/
 typedef struct {
     PyObject* value;
-    trigger_t** triggers;
-    size_t triggers_size;
+    reaction_t** reactions;
     bool is_present;
     int num_destinations;
     FEDERATED_CAPSULE_EXTENSION
@@ -125,8 +124,7 @@ typedef struct {
 typedef struct {
     PyObject_HEAD
     PyObject* value;
-    trigger_t** triggers;
-    size_t triggers_size;
+    reaction_t** reactions;
     bool is_present;
     int num_destinations;
     lf_token_t* token;
@@ -149,8 +147,6 @@ typedef struct {
 typedef struct {
     trigger_t* trigger;
     PyObject* value;
-    trigger_t** triggers;
-    size_t triggers_size;
     bool is_present;
     bool has_value;
     lf_token_t* token;
@@ -183,8 +179,7 @@ typedef struct {
     PyObject_HEAD
     PyObject* port;
     PyObject* value;
-    trigger_t** triggers;
-    size_t triggers_size;
+    reaction_t** reactions;
     bool is_present;
     int width;
     long current_index;
@@ -366,7 +361,7 @@ static PyObject* py_get_start_time(PyObject *self, PyObject *args);
 /**
  * Stop execution at the conclusion of the current logical time.
  */
-static PyObject* py_stop(PyObject *self);
+static PyObject* py_request_stop(PyObject *self);
 
 //////////////////////////////////////////////////////////////
 ///////////// Main function callable from Python code
