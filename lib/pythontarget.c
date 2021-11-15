@@ -36,6 +36,10 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PyTypeObject TagType;
 
+// This the worker that holds the GIL. When no thread holds the GIL,
+// the value of _lf_worker_number is undefined.
+int _lf_worker_number;
+
 //////////// set Function(s) /////////////
 /**
  * Set the value and is_present field of self which is of type
@@ -86,8 +90,6 @@ static PyObject* py_SET(PyObject *self, PyObject *args) {
         tmp = port->value;
         Py_INCREF(val);
         // Call the core lib API to set the port
-        int _lf_worker_number = 0;  // Only one thread should exist due to the GIL.
-                                    // _LF_SET requires this value.
         _LF_SET(port, val);
 
         Py_INCREF(val);
