@@ -518,26 +518,34 @@ port_iter_next(PyObject *self) {
  * non-multiport capsule is created and returned, which in turn can be
  * used as an ordinary LinguaFranca.port_capsule.
  * @param self The port which can be a multiport or a singular port
- * @param item The index which is used to retrieve an item from the underlying
+ * @param key The index (key) which is used to retrieve an item from the underlying
  *             C array if the port is a multiport.
  */
 static PyObject *
-port_capsule_get_item(PyObject *self, PyObject *item) {
+port_capsule_get_item(PyObject *self, PyObject *key) {
     generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
 
     // Port is not a multiport
     if (port->width == -2) {
         return self;
     }
+
+    if (PyObject_TypeCheck(key, &PyLong_Type) == 0) {
+        PyErr_Format(PyExc_TypeError,
+                     "Multiport indices must be integers, not %.200s",
+                     Py_TYPE(key)->tp_name);
+        return NULL;
+    }
+
     generic_port_capsule_struct* pyport = 
         (generic_port_capsule_struct*)self->ob_type->tp_new(self->ob_type, NULL, NULL);
     long long index = -3;
 
-    index = PyLong_AsLong(item);
+    index = PyLong_AsLong(key);
     if (index == -3) {
         PyErr_Format(PyExc_TypeError,
-                     "multiport indices must be integers, not %.200s",
-                     Py_TYPE(item)->tp_name);
+                     "Multiport indices must be integers, not %.200s",
+                     Py_TYPE(key)->tp_name);
         return NULL;
     }
 
