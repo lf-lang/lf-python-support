@@ -92,7 +92,6 @@ static PyObject* py_SET(PyObject *self, PyObject *args) {
         // Also set the values for the port capsule.      
         p->value = val;
         p->is_present = true;
-        //Py_XDECREF(tmp); // Since value is allocated in Python, the Python garbage collector will manage and free this memory
     }
 
     Py_INCREF(Py_None);
@@ -525,14 +524,14 @@ port_iter_next(PyObject *self) {
 static PyObject *
 port_capsule_get_item(PyObject *self, PyObject *item) {
     generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
-    generic_port_capsule_struct* pyport = 
-        (generic_port_capsule_struct*)self->ob_type->tp_new(self->ob_type, NULL, NULL);
-    long long index = -3;
 
     // Port is not a multiport
     if (port->width == -2) {
         return self;
     }
+    generic_port_capsule_struct* pyport = 
+        (generic_port_capsule_struct*)self->ob_type->tp_new(self->ob_type, NULL, NULL);
+    long long index = -3;
 
     index = PyLong_AsLong(item);
     if (index == -3) {
@@ -541,23 +540,21 @@ port_capsule_get_item(PyObject *self, PyObject *item) {
                      Py_TYPE(item)->tp_name);
         return NULL;
     }
-    
-    if (index != -3 && port->width > 0) {
-        generic_port_instance_struct **cport = 
-            (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
-        if (cport == NULL) {
-            error_print_and_exit("Null pointer received.");
-        }
 
-        // Py_INCREF(cport[index]->value);
-        pyport->port = PyCapsule_New(cport[index], "port", NULL);
-        pyport->value = cport[index]->value;
-        pyport->is_present = cport[index]->is_present;
-        pyport->width = -2;
-
-
-        LOG_PRINT("Getting item index %d. Is present is %d.", index, pyport->is_present);
+    generic_port_instance_struct **cport = 
+        (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
+    if (cport == NULL) {
+        error_print_and_exit("Null pointer received.");
     }
+
+    // Py_INCREF(cport[index]->value);
+    pyport->port = PyCapsule_New(cport[index], "port", NULL);
+    pyport->value = cport[index]->value;
+    pyport->is_present = cport[index]->is_present;
+    pyport->width = -2;
+
+
+    LOG_PRINT("Getting item index %d. Is present is %d.", index, pyport->is_present);
 
     
     if (pyport->value == NULL) {
@@ -1140,7 +1137,8 @@ PyObject* convert_C_port_to_py(void* port, int width) {
         //Py_INCREF(cport->value);
         ((generic_port_capsule_struct*)cap)->value = cport->value;
     } else {
-        // Value is absent
+        // Multiport. Value of the multiport itself cannot be accessed, so we set it to
+        // None.
         Py_INCREF(Py_None);
         ((generic_port_capsule_struct*)cap)->value = Py_None;
         ((generic_port_capsule_struct*)cap)->is_present = false;
