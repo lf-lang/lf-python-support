@@ -337,7 +337,7 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
     }
 
     Py_ssize_t argv_size = PyList_Size(py_argv_parsed);
-    argv = malloc(argv_size + 1);
+    argv = malloc(argv_size);
     for (Py_ssize_t i=0; i<argv_size; i++) {
         PyObject* list_item = PyList_GetItem(py_argv_parsed, i);
         if (list_item == NULL) {
@@ -364,7 +364,6 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
 
         *argc = argv_size;
     }
-    argv[argv_size] = NULL;
     return argv;
 }
 
