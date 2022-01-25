@@ -385,6 +385,17 @@ static PyObject* py_main(PyObject* self, PyObject* py_args) {
     // Initialize the Python interpreter
     Py_Initialize();
 
+    // Load the pickle module
+    if (global_pickler == NULL) {
+        global_pickler = PyImport_ImportModule("pickle");
+        if (global_pickler == NULL) {
+            if (PyErr_Occurred()) {
+                PyErr_Print();
+            }
+            error_print_and_exit("Failed to load the module 'pickle'.");
+        }
+    }
+
     DEBUG_PRINT("Initialized the Python interpreter.");
 
     Py_BEGIN_ALLOW_THREADS
@@ -1255,17 +1266,6 @@ get_python_function(string module, string class, int instance_id, string func) {
     // When done, we should always call PyGILState_Release(gstate);
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
-
-    // Load the pickle module
-    if (global_pickler == NULL) {
-        global_pickler = PyImport_ImportModule("pickle");
-        if (global_pickler == NULL) {
-            if (PyErr_Occurred()) {
-                PyErr_Print();
-            }
-            error_print_and_exit("Failed to load the module 'pickle'.");
-        }
-    }
 
     // If the Python module is already loaded, skip this.
     if (globalPythonModule == NULL) {    
