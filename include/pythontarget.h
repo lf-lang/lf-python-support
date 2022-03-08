@@ -184,6 +184,20 @@ typedef struct {
 } generic_port_capsule_struct;
 
 /**
+ * The struct used to represent modes in Python.
+ * An instance of this struct is created when entering a reaction that
+ * has declared a mode as an effect. This struct represents everything
+ * needed to take a transition to that mode, including a pointer to
+ * that mode and the type of transition (reset or history).
+ */
+typedef struct {
+	PyObject_HEAD
+	PyObject* mode;
+	PyObject* lf_self;
+	lf_mode_change_type_t change_type;
+} mode_capsule_struct_t;
+
+/**
  * Python wrapper for the tag_t struct in the C target.
  **/
 typedef struct {
@@ -279,7 +293,12 @@ typedef struct {
  * @param args contains:
  *      - val: The value to insert into the port struct.
  */
-static PyObject* py_SET(PyObject *self, PyObject *args);
+static PyObject* py_port_set(PyObject *self, PyObject *args);
+
+/**
+ * Set a new mode for a modal model.
+ */
+static PyObject* py_mode_set(PyObject *self, PyObject *args);
 
 //////////////////////////////////////////////////////////////
 /////////////  schedule Functions (to schedule an action)
@@ -364,6 +383,15 @@ static PyObject* py_main(PyObject *self, PyObject *args);
 
 //////////////////////////////////////////////////////////////
 /////////////  Python Helper Functions
+
+/**
+ * Convert a `reactor_mode_t` to a `mode_capsule_t`.
+ */
+PyObject* convert_C_mode_to_py(
+		reactor_mode_t* mode,
+		self_base_t* lf_self,
+		lf_mode_change_type_t change_type
+);
 
 /**
  * A function that is called any time a Python reaction is called with
