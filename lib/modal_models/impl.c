@@ -32,10 +32,33 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "definitions.h"
 
-//////////////////////////////////////////////////////////////
-/////////////  Python Structs
+//////////// set Function /////////////
 
-////// Modes //////
+/**
+ * Set a new mode for a modal model.
+ */
+static PyObject* py_mode_set(PyObject *mode_capsule, PyObject *args) {
+    mode_capsule_struct_t* m = (mode_capsule_struct_t*)mode_capsule;
+
+    reactor_mode_t* mode = PyCapsule_GetPointer(m->mode, "mode");
+    if (mode == NULL) {
+        error_print("Null pointer received.");
+        exit(1);
+    }
+
+    self_base_t* self = PyCapsule_GetPointer(m->lf_self, "lf_self");
+    if (self == NULL) {
+        error_print("Null pointer received.");
+        exit(1);
+    }
+
+    _LF_SET_MODE_WITH_TYPE(mode, m->change_type);
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
+//////////// Python Struct /////////////
 
 /*
  * The function members of mode_capsule.
@@ -60,6 +83,9 @@ static PyTypeObject mode_capsule_t = {
     .tp_new = PyType_GenericNew,
     .tp_methods = mode_capsule_methods,
 };
+
+
+///////////////// Functions used in mode creation and initialization /////////////
 
 /**
  * @brief Initialize `mode_capsule_t` in the `current_module`.
@@ -113,28 +139,4 @@ PyObject* convert_C_mode_to_py(
     cap->change_type = change_type;
 
 	return cap;
-}
-
-/**
- * Set a new mode for a modal model.
- */
-static PyObject* py_mode_set(PyObject *mode_capsule, PyObject *args) {
-    mode_capsule_struct_t* m = (mode_capsule_struct_t*)mode_capsule;
-
-    reactor_mode_t* mode = PyCapsule_GetPointer(m->mode, "mode");
-    if (mode == NULL) {
-        error_print("Null pointer received.");
-        exit(1);
-    }
-
-    self_base_t* self = PyCapsule_GetPointer(m->lf_self, "lf_self");
-    if (self == NULL) {
-        error_print("Null pointer received.");
-        exit(1);
-    }
-
-    _LF_SET_MODE_WITH_TYPE(mode, m->change_type);
-
-    Py_INCREF(Py_None);
-    return Py_None;
 }

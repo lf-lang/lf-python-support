@@ -55,6 +55,11 @@ typedef struct {
 
 
 /**
+ * Set a new mode for a modal model.
+ */
+static PyObject* py_mode_set(PyObject *self, PyObject *args);
+
+/**
  * Convert a `reactor_mode_t` to a `mode_capsule_t`.
  */
 PyObject* convert_C_mode_to_py(
@@ -68,11 +73,6 @@ PyObject* convert_C_mode_to_py(
  * 
  */
 void initialize_mode_capsule_t(PyObject* current_module);
-
-/**
- * Set a new mode for a modal model.
- */
-static PyObject* py_mode_set(PyObject *self, PyObject *args);
 
 #else 
 #define initialize_mode_capsule_t(...) 
