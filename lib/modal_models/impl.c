@@ -94,7 +94,7 @@ static PyTypeObject mode_capsule_t = {
 void initialize_mode_capsule_t(PyObject* current_module) {
     // Initialize the mode_capsule type
     if (PyType_Ready(&mode_capsule_t) < 0) {
-        return NULL;
+        return;
     }
 
     // Add the mode_capsule type to the module's dictionary.
@@ -102,7 +102,7 @@ void initialize_mode_capsule_t(PyObject* current_module) {
     if (PyModule_AddObject(current_module, "mode_capsule", (PyObject *) &mode_capsule_t) < 0) {
         Py_DECREF(&mode_capsule_t);
         Py_DECREF(current_module);
-        return NULL;
+        return;
     }
 }
 
