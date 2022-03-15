@@ -33,10 +33,12 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "pythontarget.h"
 #include "core/utils/util.h"
 #include "core/tag.h"
+#include "modal_models/definitions.h"
 
 PyTypeObject TagType;
 
 //////////// set Function(s) /////////////
+
 /**
  * Set the value and is_present field of self which is of type
  * LinguaFranca.port_capsule
@@ -65,7 +67,7 @@ PyTypeObject TagType;
  * @param args contains:
  *      - val: The value to insert into the port struct.
  */
-static PyObject* py_SET(PyObject *self, PyObject *args) {
+static PyObject* py_port_set(PyObject *self, PyObject *args) {
     generic_port_capsule_struct* p = (generic_port_capsule_struct*)self;
     PyObject* val = NULL;
 
@@ -827,14 +829,14 @@ static PyMemberDef port_capsule_members[] = {
  */
 static PyMethodDef port_capsule_methods[] = {
     {"__getitem__", (PyCFunction)port_capsule_get_item, METH_O|METH_COEXIST, "x.__getitem__(y) <==> x[y]"},
-    {"set", (PyCFunction)py_SET, METH_VARARGS, "Set value of the port as well as the is_present field"},
+    {"set", (PyCFunction)py_port_set, METH_VARARGS, "Set value of the port as well as the is_present field"},
     {NULL}  /* Sentinel */
 };
 
 
 /*
- * The definition of port_instance type object.
- * Used to describe how port_instance behaves.
+ * The definition of port_capsule type object, which is
+ * used to describe how port_capsule behaves.
  */
 static PyTypeObject port_capsule_t = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -1027,12 +1029,12 @@ PyMODINIT_FUNC
 GEN_NAME(PyInit_,MODULE_NAME)(void) {
     PyObject *m;
 
-    // Initialize the port_instance type
+    // Initialize the port_capsule type
     if (PyType_Ready(&port_capsule_t) < 0) {
         return NULL;
     }
 
-    // Initialize the port_instance_token type
+    // Initialize the port_capsule type
     if (PyType_Ready(&port_instance_token_t) < 0) {
         return NULL;
     }
@@ -1053,7 +1055,9 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
         return NULL;
     }
 
-    // Add the port_instance type to the module's dictionary
+    initialize_mode_capsule_t(m);
+
+    // Add the port_capsule type to the module's dictionary
     Py_INCREF(&port_capsule_t);
     if (PyModule_AddObject(m, "port_capsule", (PyObject *) &port_capsule_t) < 0) {
         Py_DECREF(&port_capsule_t);
@@ -1087,8 +1091,6 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
 
     return m;
 }
-
-
 
 //////////////////////////////////////////////////////////////
 /////////////  Python Helper Functions

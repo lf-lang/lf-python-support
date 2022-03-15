@@ -279,7 +279,7 @@ typedef struct {
  * @param args contains:
  *      - val: The value to insert into the port struct.
  */
-static PyObject* py_SET(PyObject *self, PyObject *args);
+static PyObject* py_port_set(PyObject *self, PyObject *args);
 
 //////////////////////////////////////////////////////////////
 /////////////  schedule Functions (to schedule an action)
@@ -425,7 +425,6 @@ PyObject* convert_C_action_to_py(void* action);
  * @param pArgs the PyList of arguments to be sent to function func()
  */
 PyObject* get_python_function(string module, string class, int instance_id, string func);
-
 
 /*
  * The Python runtime will call this function to initialize the module.
