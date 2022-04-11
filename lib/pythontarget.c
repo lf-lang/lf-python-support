@@ -332,7 +332,7 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
         // Build a generic argv with just one argument, which
         // is the module name.
         *argc = 1;
-        argv = malloc(2);
+        argv = malloc(2 * sizeof(char*));
         argv[0] = TOSTRING(MODULE_NAME);
         argv[1] = NULL;
         return argv;

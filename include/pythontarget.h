@@ -356,7 +356,7 @@ static PyObject* py_get_start_time(PyObject *self, PyObject *args);
 /**
  * Stop execution at the conclusion of the current logical time.
  */
-static PyObject* py_stop(PyObject *self);
+static PyObject* py_request_stop(PyObject *self, PyObject *args);
 
 //////////////////////////////////////////////////////////////
 ///////////// Main function callable from Python code
