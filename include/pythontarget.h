@@ -119,23 +119,6 @@ typedef struct {
 } generic_port_instance_struct;
 
 /**
- * Special version of the template_input_output_port_struct
- * for dynamic arrays.
- * FIXME: This is currently kept for compatibility reasons
- * and should be removed soon.
- **/
-typedef struct {
-    PyObject_HEAD
-    PyObject* value;
-    bool is_present;
-    int num_destinations;
-    lf_token_t* token;
-    int length;
-    FEDERATED_CAPSULE_EXTENSION
-} generic_port_instance_with_token_struct;
-
-
-/**
  * The struct used to instantiate an action.
  * This is used 
  * in the PythonGenerator instead of redefining
