@@ -111,6 +111,10 @@ typedef struct {
     PyObject* value;
     bool is_present;
     int num_destinations;
+    lf_token_t* token;
+    int length;
+    void (*destructor) (void* value);
+    void* (*copy_constructor) (void* value);
     FEDERATED_CAPSULE_EXTENSION
 } generic_port_instance_struct;
 
