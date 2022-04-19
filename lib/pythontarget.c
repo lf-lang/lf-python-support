@@ -856,34 +856,6 @@ static PyTypeObject port_capsule_t = {
 };
 
 
-/*
- * The members of a port_instance, used to define
- * a native Python type.
- */
-static PyMemberDef port_instance_token_members[] = {
-    {"value", T_OBJECT_EX, offsetof(generic_port_instance_with_token_struct, value), 0, "Value of the port"},
-    {"is_present", T_BOOL, offsetof(generic_port_instance_with_token_struct, is_present), 0, "Check if value is present at current logical time"},
-    {"num_destinations", T_INT, offsetof(generic_port_instance_with_token_struct, num_destinations), 0, "Number of destinations"},
-    {NULL}  /* Sentinel */
-};
-
-
-/*
- * The definition of port_instance type object.
- * Used to describe how port_instance behaves.
- */
-static PyTypeObject port_instance_token_t = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "LinguaFranca.port_instance",
-    .tp_doc = "port_instance objects",
-    .tp_basicsize = sizeof(generic_port_instance_with_token_struct),
-    .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_new = PyType_GenericNew,
-    .tp_members = port_instance_token_members,
-};
-
-
 //// Actions /////
 /*
  * The members of a action_capsule that are accessible from a Python program, used to define
@@ -1034,11 +1006,6 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
         return NULL;
     }
 
-    // Initialize the port_capsule type
-    if (PyType_Ready(&port_instance_token_t) < 0) {
-        return NULL;
-    }
-
     // Initialize the action_capsule type
     if (PyType_Ready(&action_capsule_t) < 0) {
         return NULL;
@@ -1065,13 +1032,6 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
         return NULL;
     }
 
-    // Add the port_instance_token type to the module's dictionary
-    Py_INCREF(&port_instance_token_t);
-    if (PyModule_AddObject(m, "port_instance_token", (PyObject *) &port_instance_token_t) < 0) {
-        Py_DECREF(&port_instance_token_t);
-        Py_DECREF(m);
-        return NULL;
-    }
 
     // Add the action_capsule type to the module's dictionary
     Py_INCREF(&action_capsule_t);
