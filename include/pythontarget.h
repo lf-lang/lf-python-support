@@ -47,7 +47,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 #include <structmember.h>
-#include "ctarget.h"
+#include "ctarget_schedule.h"
 
 #include <limits.h>
 

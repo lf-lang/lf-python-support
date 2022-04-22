@@ -37,7 +37,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef MODAL_REACTORS
 #include <Python.h>
 #include <structmember.h>
-#include "../ctarget.h"
+#include "../ctarget_schedule.h"
 
 /**
  * The struct used to represent modes in Python.

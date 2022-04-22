@@ -198,14 +198,14 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
  * Return the elapsed physical time in nanoseconds.
  */
 static PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(get_elapsed_logical_time());
+    return PyLong_FromLongLong(lf_time(LF_ELAPSED_LOGICAL));
 }
 
 /** 
  * Return the elapsed physical time in nanoseconds.
  */
 static PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(get_logical_time());
+    return PyLong_FromLongLong(lf_time(LF_LOGICAL));
 }
 
 /** 
@@ -216,7 +216,7 @@ static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
     if (t == NULL) {
         return NULL;
     }
-    t->tag = get_current_tag();
+    t->tag = lf_tag();
     return (PyObject *) t;
 }
 
@@ -243,7 +243,7 @@ static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
     }
     tag_t tag1_v = ((py_tag_t *) tag1)->tag;
     tag_t tag2_v = ((py_tag_t *) tag2)->tag;
-    return PyLong_FromLong(compare_tags(tag1_v, tag2_v));
+    return PyLong_FromLong(lf_compare_tags(tag1_v, tag2_v));
 }
 
 
@@ -251,7 +251,7 @@ static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
  * Return the current microstep.
  */
 static PyObject* py_get_microstep(PyObject *self, PyObject *args) {
-    return PyLong_FromUnsignedLong(get_microstep());
+    return PyLong_FromUnsignedLong(lf_tag().microstep);
 }
 
 
@@ -259,21 +259,21 @@ static PyObject* py_get_microstep(PyObject *self, PyObject *args) {
  * Return the elapsed physical time in nanoseconds.
  */
 static PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(get_physical_time());
+    return PyLong_FromLongLong(lf_time(LF_PHYSICAL));
 }
 
 /** 
  * Return the elapsed physical time in nanoseconds.
  */
 static PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(get_elapsed_physical_time());
+    return PyLong_FromLongLong(lf_time(LF_ELAPSED_PHYSICAL));
 }
 
 /**
  * Return the start time in nanoseconds.
  */
 static PyObject* py_get_start_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(get_start_time());
+    return PyLong_FromLongLong(lf_time(LF_START));
 }
 
 /**
