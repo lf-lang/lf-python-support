@@ -1,9 +1,10 @@
 /**
  * @file
  * @author Soroush Bateni (soroush@utdallas.edu)
+ * @autohr Hou Seng Wong (housengw@berkeley.edu)
  *
  * @section LICENSE
-Copyright (c) 2020, The University of California at Berkeley.
+Copyright (c) 2022, The University of California at Berkeley.
 Copyright (c) 2021, The University of Texas at Dallas.
 
 Redistribution and use in source and binary forms, with or without modification,

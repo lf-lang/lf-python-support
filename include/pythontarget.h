@@ -2,6 +2,7 @@
  * @file
  * @author Edward A. Lee (eal@berkeley.edu)
  * @author Soroush Bateni (soroush@utdallas.edu)
+ * @author Hou Seng Wong (housengw@berkeley.edu)
  *
  * @section LICENSE
 Copyright (c) 2020, The University of California at Berkeley.
