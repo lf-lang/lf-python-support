@@ -48,6 +48,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Python.h>
 #include <structmember.h>
 #include "ctarget_schedule.h"
+#include "python_tag.h"
 
 #include <limits.h>
 
@@ -169,45 +170,6 @@ typedef struct {
     long current_index;
     FEDERATED_CAPSULE_EXTENSION
 } generic_port_capsule_struct;
-
-/**
- * Python wrapper for the tag_t struct in the C target.
- **/
-typedef struct {
-    PyObject_HEAD
-    tag_t tag;
-} py_tag_t;
-
-/**
- * Tag getter for the "time" attribute
- **/
-static PyObject* Tag_get_time(py_tag_t *self, void *closure);
-
-/**
- * Tag getter for the "microstep" attribute
- **/
-static PyObject* Tag_get_microstep(py_tag_t *self, void *closure);
-
-/**
- * Initialize the Tag object with the given values for "time" and "microstep", 
- * both of which are required.
- * same as __init__()
- * 
- * @param self A py_tag_t object.
- * @param args The arguments are:
- *      - time: A logical time.
- *      - microstep: A microstep within the logical time "time".
- */
-static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds);
-
-/**
- * Rich compare function for Tag objects. Used in .tp_richcompare.
- * 
- * @param self A py_tag_t object on the left side of the operator.
- * @param other A py_tag_t object on the right side of the operator.
- * @param op the comparison operator
- */
-static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op);
 
 /**
  * The struct used to hold an action
