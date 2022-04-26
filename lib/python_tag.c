@@ -1,6 +1,6 @@
 #include "python_tag.h"
 
-PyTypeObject TagType;
+PyTypeObject PyTagType;
 
 /**
  * Initialize the Tag object with the given values for "time" and "microstep", 
@@ -26,7 +26,7 @@ int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
  * @param op the comparison operator
  */
 PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
-    if (!PyObject_IsInstance(other, (PyObject *) &TagType)) {
+    if (!PyObject_IsInstance(other, (PyObject *) &PyTagType)) {
         PyErr_SetString(PyExc_TypeError, "Cannot compare a Tag with a non-Tag type.");
         return NULL;
     }
@@ -86,9 +86,9 @@ PyGetSetDef Tag_getsetters[] = {
 };
 
 /**
- * Definition of the TagType Object. 
+ * Definition of the PyTagType Object. 
  **/
-PyTypeObject TagType = {
+PyTypeObject PyTagType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "LinguaFranca.Tag",
     .tp_doc = "Tag object",

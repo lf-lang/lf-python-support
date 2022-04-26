@@ -135,7 +135,7 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
  * Return the current tag object.
  */
 static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
-    py_tag_t *t = (py_tag_t *) PyType_GenericNew(&TagType, NULL, NULL);
+    py_tag_t *t = (py_tag_t *) PyType_GenericNew(&PyTagType, NULL, NULL);
     if (t == NULL) {
         return NULL;
     }
@@ -159,8 +159,8 @@ static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
     if (!PyArg_UnpackTuple(args, "args", 2, 2, &tag1, &tag2)) {
         return NULL;
     } 
-    if (!PyObject_IsInstance(tag1, (PyObject *) &TagType) 
-     || !PyObject_IsInstance(tag2, (PyObject *) &TagType)) {
+    if (!PyObject_IsInstance(tag1, (PyObject *) &PyTagType) 
+     || !PyObject_IsInstance(tag2, (PyObject *) &PyTagType)) {
         PyErr_SetString(PyExc_TypeError, "Arguments must be Tag type.");
         return NULL;
     }
@@ -371,7 +371,7 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
     }
 
     // Initialize the Tag type
-    if (PyType_Ready(&TagType) < 0) {
+    if (PyType_Ready(&PyTagType) < 0) {
         return NULL;
     }
 
@@ -406,9 +406,9 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
     }
 
     // Add the Tag type to the module's dictionary
-    Py_INCREF(&TagType);
-    if (PyModule_AddObject(m, "Tag", (PyObject *) &TagType) < 0) {
-        Py_DECREF(&TagType);
+    Py_INCREF(&PyTagType);
+    if (PyModule_AddObject(m, "Tag", (PyObject *) &PyTagType) < 0) {
+        Py_DECREF(&PyTagType);
         Py_DECREF(m);
         return NULL;
     }

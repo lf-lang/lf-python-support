@@ -56,7 +56,7 @@ PyMethodDef PyTimeTypeMethods[] = {
 };
 
 /**
- * Definition of the TagType Object. 
+ * Definition of the PyTagType Object. 
  **/
 PyTypeObject PyTimeType = {
     PyVarObject_HEAD_INIT(NULL, 0)
