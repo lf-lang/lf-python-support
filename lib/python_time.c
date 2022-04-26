@@ -10,10 +10,28 @@ PyObject* py_lf_time_logical(PyObject *self, PyObject *args) {
 }
 
 /** 
+ * Return the logical time in nanoseconds.
+ * @deprecated
+ */
+PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_logical_time() is deprecated. Use lf.time.logical() instead", 1);
+    return py_lf_time_logical(self, args);
+}
+
+/** 
  * Return the elapsed logical time in nanoseconds.
  */
 PyObject* py_lf_time_elapsed_logical(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(lf_time(LF_ELAPSED_LOGICAL));
+}
+
+/** 
+ * Return the elapsed logical time in nanoseconds.
+ * @deprecated
+ */
+PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_logical_time() is deprecated. Use lf.time.elapsed_logical() instead", 1);
+    return py_lf_time_elapsed_logical(self, args);
 }
 
 /** 
@@ -24,10 +42,28 @@ PyObject* py_lf_time_physical(PyObject *self, PyObject *args) {
 }
 
 /** 
+ * Return the physical time in nanoseconds.
+ * @deprecated
+ */
+PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_physical_time() is deprecated. Use lf.time.physical() instead", 1);
+    return py_lf_time_physical(self, args);
+}
+
+/** 
  * Return the elapsed physical time in nanoseconds.
  */
 PyObject* py_lf_time_elapsed_physical(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(lf_time(LF_ELAPSED_PHYSICAL));
+}
+
+/** 
+ * Return the elapsed physical time in nanoseconds.
+ * @deprecated
+ */
+PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_physical_time() is deprecated. Use lf.time.elapsed_physical() instead", 1);
+    return py_lf_time_elapsed_physical(self, args);
 }
 
 /**
@@ -38,9 +74,19 @@ PyObject* py_lf_time_start(PyObject *self, PyObject *args) {
 }
 
 /**
+ * Return the start time in nanoseconds.
+ * @deprecated
+ */
+PyObject* py_get_start_time(PyObject *self, PyObject *args) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_start_time() is deprecated. Use lf.time.start() instead", 1);
+    return py_lf_time_start(self, args);
+}
+
+/**
  * Return the current microstep.
  */
 PyObject* py_get_microstep(PyObject *self, PyObject *args) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_microstep() is deprecated. Use lf.tag().microstep instead", 1);
     return PyLong_FromUnsignedLong(lf_tag().microstep);
 }
 

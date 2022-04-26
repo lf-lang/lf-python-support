@@ -320,14 +320,14 @@ static PyObject* py_main(PyObject* self, PyObject* py_args) {
 static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"start", py_main, METH_VARARGS, NULL},
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
-  {"get_elapsed_logical_time", py_lf_time_elapsed_logical, METH_NOARGS, NULL},
-  {"get_logical_time", py_lf_time_logical, METH_NOARGS, NULL},
-  {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
+  {"get_logical_time", py_get_logical_time, METH_NOARGS, NULL},
+  {"get_elapsed_logical_time", py_get_elapsed_logical_time, METH_NOARGS, NULL},
+  {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
+  {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
+  {"get_start_time", py_get_start_time, METH_NOARGS, NULL},
+  {"tag", py_get_current_tag, METH_NOARGS, NULL},
   {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
   {"compare_tags", py_compare_tags, METH_VARARGS, NULL},
-  {"get_physical_time", py_lf_time_physical, METH_NOARGS, NULL},
-  {"get_elapsed_physical_time", py_lf_time_elapsed_physical, METH_NOARGS, NULL},
-  {"get_start_time", py_lf_time_start, METH_NOARGS, NULL},
   {"request_stop", py_request_stop, METH_NOARGS, NULL},
   {NULL, NULL, 0, NULL}
 };
