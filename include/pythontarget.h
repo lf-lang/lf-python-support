@@ -106,54 +106,6 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args);
 
 //////////////////////////////////////////////////////////////
 /////////////  Python Helper Functions (called from Python code)
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args);
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_logical_time(PyObject *self, PyObject *args);
-
-
-/** 
- * Return the current tag as a Tag object.
- */
-static PyObject* py_get_current_tag(PyObject *self, PyObject *args);
-
-/**
- * Compare two tags. Return -1 if the first is less than
- * the second, 0 if they are equal, and +1 if the first is
- * greater than the second. A tag is greater than another if
- * its time is greater or if its time is equal and its microstep
- * is greater.
- * @param tag1
- * @param tag2
- * @return -1, 0, or 1 depending on the relation.
- */
-static PyObject* py_compare_tags(PyObject *self, PyObject *args);
-
-/**
- * Return the current microstep.
- */
-static PyObject* py_get_microstep(PyObject *self, PyObject *args);
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_physical_time(PyObject *self, PyObject *args);
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-instant_t get_elapsed_physical_time();
-static PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args);
-
-/**
- * Return the start time in nanoseconds.
- */
-static PyObject* py_get_start_time(PyObject *self, PyObject *args);
 
 /**
  * Stop execution at the conclusion of the current logical time.

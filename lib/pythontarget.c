@@ -34,6 +34,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "python_tag.c"
 #include "python_port.c"
 #include "python_action.c"
+#include "python_time.c"
 #include "core/utils/util.h"
 #include "core/tag.h"
 #include "modal_models/definitions.h"
@@ -130,22 +131,6 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
     return Py_None;
 }
 
-
-///////// Time-keeping functions //////////
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_ELAPSED_LOGICAL));
-}
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_LOGICAL));
-}
-
 /** 
  * Return the current tag object.
  */
@@ -182,36 +167,6 @@ static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
     tag_t tag1_v = ((py_tag_t *) tag1)->tag;
     tag_t tag2_v = ((py_tag_t *) tag2)->tag;
     return PyLong_FromLong(lf_compare_tags(tag1_v, tag2_v));
-}
-
-
-/**
- * Return the current microstep.
- */
-static PyObject* py_get_microstep(PyObject *self, PyObject *args) {
-    return PyLong_FromUnsignedLong(lf_tag().microstep);
-}
-
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_PHYSICAL));
-}
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_ELAPSED_PHYSICAL));
-}
-
-/**
- * Return the start time in nanoseconds.
- */
-static PyObject* py_get_start_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_START));
 }
 
 /**
@@ -365,14 +320,14 @@ static PyObject* py_main(PyObject* self, PyObject* py_args) {
 static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"start", py_main, METH_VARARGS, NULL},
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
-  {"get_elapsed_logical_time", py_get_elapsed_logical_time, METH_NOARGS, NULL},
-  {"get_logical_time", py_get_logical_time, METH_NOARGS, NULL},
+  {"get_elapsed_logical_time", py_lf_time_elapsed_logical, METH_NOARGS, NULL},
+  {"get_logical_time", py_lf_time_logical, METH_NOARGS, NULL},
   {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
   {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
   {"compare_tags", py_compare_tags, METH_VARARGS, NULL},
-  {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
-  {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
-  {"get_start_time", py_get_start_time, METH_NOARGS, NULL},
+  {"get_physical_time", py_lf_time_physical, METH_NOARGS, NULL},
+  {"get_elapsed_physical_time", py_lf_time_elapsed_physical, METH_NOARGS, NULL},
+  {"get_start_time", py_lf_time_start, METH_NOARGS, NULL},
   {"request_stop", py_request_stop, METH_NOARGS, NULL},
   {NULL, NULL, 0, NULL}
 };
@@ -420,6 +375,11 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
         return NULL;
     }
 
+    // Initialize the Time type
+    if (PyType_Ready(&PyTimeType) < 0) {
+        return NULL;
+    }
+
     m = PyModule_Create(&MODULE_NAME);
 
     if (m == NULL) {
@@ -449,6 +409,14 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
     Py_INCREF(&TagType);
     if (PyModule_AddObject(m, "Tag", (PyObject *) &TagType) < 0) {
         Py_DECREF(&TagType);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    // Add the Time type to the module's dictionary
+    Py_INCREF(&PyTimeType);
+    if (PyModule_AddObject(m, "time", (PyObject *) &PyTimeType) < 0) {
+        Py_DECREF(&PyTimeType);
         Py_DECREF(m);
         return NULL;
     }
