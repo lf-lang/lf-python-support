@@ -33,6 +33,27 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 PyTypeObject PyTagType;
 
+/** 
+ * Return the current tag object.
+ */
+static PyObject* py_lf_tag(PyObject *self, PyObject *args) {
+    py_tag_t *t = (py_tag_t *) PyType_GenericNew(&PyTagType, NULL, NULL);
+    if (t == NULL) {
+        return NULL;
+    }
+    t->tag = lf_tag();
+    return (PyObject *) t;
+}
+
+/** 
+ * Return the current tag object.
+ * @deprecated
+ */
+static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_current_tag() is deprecated. Use lf.tag() instead", 1);
+    return py_lf_tag(self, args);
+}
+
 /**
  * Initialize the Tag object with the given values for "time" and "microstep", 
  * both of which are required.

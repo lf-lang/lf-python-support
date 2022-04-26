@@ -132,18 +132,6 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
     return Py_None;
 }
 
-/** 
- * Return the current tag object.
- */
-static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
-    py_tag_t *t = (py_tag_t *) PyType_GenericNew(&PyTagType, NULL, NULL);
-    if (t == NULL) {
-        return NULL;
-    }
-    t->tag = lf_tag();
-    return (PyObject *) t;
-}
-
 /**
  * Compare two tags. Return -1 if the first is less than
  * the second, 0 if they are equal, and +1 if the first is
@@ -326,7 +314,8 @@ static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
   {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
   {"get_start_time", py_get_start_time, METH_NOARGS, NULL},
-  {"tag", py_get_current_tag, METH_NOARGS, NULL},
+  {"tag", py_lf_tag, METH_NOARGS, NULL},
+  {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
   {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
   {"compare_tags", py_compare_tags, METH_VARARGS, NULL},
   {"request_stop", py_request_stop, METH_NOARGS, NULL},
