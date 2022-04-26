@@ -1,6 +1,6 @@
 #include "python_port.h"
 
-PyTypeObject port_capsule_t;
+PyTypeObject py_port_capsule_t;
 
 //////////// set Function(s) /////////////
 /**
@@ -81,10 +81,10 @@ void py_port_capsule_dealloc(generic_port_capsule_struct *self) {
  * 
  * To initialize the port_capsule, this function first initializes a 
  * generic_port_capsule_struct* self using the tp_alloc property of 
- * port_capsule (@see port_capsule_t) and then assigns the members
+ * port_capsule (@see py_port_capsule_t) and then assigns the members
  * of self with default values of port= NULL, value = NULL, is_present = false,
  * current_index = 0, width = -2.
- * @param type The Python type object. In this case, port_capsule_t
+ * @param type The Python type object. In this case, py_port_capsule_t
  * @param args The optional arguments that are:
  *      - port: A capsule that holds a void* to the underlying C port
  *      - value: value of the port
@@ -346,7 +346,7 @@ PyMethodDef py_port_capsule_methods[] = {
  * The definition of port_capsule type object, which is
  * used to describe how port_capsule behaves.
  */
-PyTypeObject port_capsule_t = {
+PyTypeObject py_port_capsule_t = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "LinguaFranca.port_capsule",
     .tp_doc = "port_capsule objects",

@@ -35,7 +35,7 @@ typedef struct {
  * This template is used as a blueprint to create
  * Python objects that follow the same structure.
  * The resulting Python object will have the type 
- * port_capsule_t in C (LinguaFranca.port_capsule in Python).
+ * py_port_capsule_t in C (LinguaFranca.port_capsule in Python).
  * 
  * port: A PyCapsule (https://docs.python.org/3/c-api/capsule.html)
  *       that safely holds a C void* inside a Python object. This capsule
