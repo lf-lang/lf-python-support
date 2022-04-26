@@ -49,6 +49,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <structmember.h>
 #include "ctarget_schedule.h"
 #include "python_tag.h"
+#include "python_port.h"
 
 #include <limits.h>
 
@@ -82,43 +83,6 @@ PyObject *globalPythonModuleDict = NULL;
 // Import pickle to enable native serialization
 static PyObject* global_pickler = NULL;
 
-#ifdef FEDERATED
-#ifdef FEDERATED_DECENTRALIZED
-#define FEDERATED_CAPSULE_EXTENSION \
-    tag_t intended_tag; \
-    instant_t physical_time_of_arrival;
-#else // FEDERATED_CENTRALIZED
-#define FEDERATED_CAPSULE_EXTENSION \
-    instant_t physical_time_of_arrival;
-#endif // FEDERATED_DECENTRALIZED
-#else  // not FEDERATED
-#define FEDERATED_CAPSULE_EXTENSION // Empty
-#endif // FEDERATED
-
-/**
- * The struct used to instantiate a port
- * in Lingua Franca. This is used 
- * in the PythonGenerator instead of redefining
- * a struct for each port.
- * This can be used for any Python object,
- * including lists and tuples.
- * PyObject* value: the value of the port with the generic Python type
- * is_present: indicates if the value of the port is present
- *             at the current logical time
- * num_destinations: used for reference counting the number of
- *                   connections to destinations.
- **/
-typedef struct {
-    PyObject* value;
-    bool is_present;
-    int num_destinations;
-    lf_token_t* token;
-    int length;
-    void (*destructor) (void* value);
-    void* (*copy_constructor) (void* value);
-    FEDERATED_CAPSULE_EXTENSION
-} generic_port_instance_struct;
-
 /**
  * The struct used to instantiate an action.
  * This is used 
@@ -138,38 +102,6 @@ typedef struct {
     lf_token_t* token;
     FEDERATED_CAPSULE_EXTENSION
 } generic_action_instance_struct;
-
-/**
- * The struct used to represent ports in Python 
- * This template is used as a blueprint to create
- * Python objects that follow the same structure.
- * The resulting Python object will have the type 
- * port_capsule_t in C (LinguaFranca.port_capsule in Python).
- * 
- * port: A PyCapsule (https://docs.python.org/3/c-api/capsule.html)
- *       that safely holds a C void* inside a Python object. This capsule
- *       is passed through the Python code and is extracted in C functions
- *       like set and __getitem__.
- * value: The value of the port at the time of invocation of @see convert_C_port_to_py.
- *        The value and is_present are copied from the port if it is not a multiport and can be accessed as
- *        port.value. For multiports, is_present will be false and value will be None. The value of each individual
- *        port can be accessed as port[idx].value (@see port_capsule_get_item). 
- *        Subsequent calls to set will also need to update the value and is_present fields so that they are reflected
- *        in Python code.
- * is_present: Indicates if the value of the singular port is present
- *             at the current logical time
- * width: Indicates the width of the multiport. This is set to -2 for non-multiports.
- * current_index: Used to facilitate iterative functions (@see port_iter)
- **/
-typedef struct {
-    PyObject_HEAD
-    PyObject* port;
-    PyObject* value;
-    bool is_present;
-    int width;
-    long current_index;
-    FEDERATED_CAPSULE_EXTENSION
-} generic_port_capsule_struct;
 
 /**
  * The struct used to hold an action
@@ -196,39 +128,6 @@ typedef struct {
     bool is_present; // Same as value, is_present will be copied from the C action->is_present
     FEDERATED_CAPSULE_EXTENSION
 } generic_action_capsule_struct;
-
-//////////////////////////////////////////////////////////////
-/////////////  SET Functions (to produce an output)
-
-/**
- * Set the value and is_present field of self which is of type
- * LinguaFranca.port_capsule
- * 
- * Each LinguaFranca.port_capsule includes a void* pointer of 
- * the C port (a.k.a. generic_port_instance_struct*).
- * @see generic_port_capsule_struct in pythontarget.h
- * 
- * This function calls the underlying _LF_SET API.
- * @see xtext/org.icyphy.linguafranca/src/lib/core/reactor.h
- * 
- * This function can be used to set any type of PyObject ranging from
- * primitive types to complex lists and tuples. Moreover, this function
- * is callable from Python target code by using port_name.out(value)
- * 
- * Some examples include
- *  port_name.out("Hello")
- *  port_name.out(5)
- *  port_name.out(["Hello", 5 , (2.8, "X")])
- * 
- * The port type given in the Lingua Franca is only used as a "suggestion"
- * as per Python's duck typing principles. The end-user is responsible for
- * appropriately handling types on the receiving end of this port.
- * @param self The output port (by name) or input of a contained
- *                 reactor in form input_name.port_name.
- * @param args contains:
- *      - val: The value to insert into the port struct.
- */
-static PyObject* py_port_set(PyObject *self, PyObject *args);
 
 //////////////////////////////////////////////////////////////
 /////////////  schedule Functions (to schedule an action)
