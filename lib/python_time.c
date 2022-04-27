@@ -53,7 +53,7 @@ PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
 /** 
  * Return the elapsed logical time in nanoseconds.
  */
-PyObject* py_lf_time_elapsed_logical(PyObject *self, PyObject *args) {
+PyObject* py_lf_time_logical_elapsed(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(_lf_time(LF_ELAPSED_LOGICAL));
 }
 
@@ -63,7 +63,7 @@ PyObject* py_lf_time_elapsed_logical(PyObject *self, PyObject *args) {
  */
 PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args) {
     PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_logical_time() is deprecated. Use lf.time.elapsed_logical() instead", 1);
-    return py_lf_time_elapsed_logical(self, args);
+    return py_lf_time_logical_elapsed(self, args);
 }
 
 /** 
@@ -85,7 +85,7 @@ PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
 /** 
  * Return the elapsed physical time in nanoseconds.
  */
-PyObject* py_lf_time_elapsed_physical(PyObject *self, PyObject *args) {
+PyObject* py_lf_time_physical_elapsed(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(_lf_time(LF_ELAPSED_PHYSICAL));
 }
 
@@ -95,7 +95,7 @@ PyObject* py_lf_time_elapsed_physical(PyObject *self, PyObject *args) {
  */
 PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
     PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_physical_time() is deprecated. Use lf.time.elapsed_physical() instead", 1);
-    return py_lf_time_elapsed_physical(self, args);
+    return py_lf_time_physical_elapsed(self, args);
 }
 
 /**
@@ -126,9 +126,9 @@ PyTypeObject PyTimeType;
 
 PyMethodDef PyTimeTypeMethods[] = {
     {"logical", (PyCFunction) py_lf_time_logical, METH_NOARGS|METH_STATIC, "Get the current logical time."},
-    {"elapsed_logical", (PyCFunction) py_lf_time_elapsed_logical, METH_NOARGS|METH_STATIC, "Get the current elapsed logical time"},
+    {"logical_elapsed", (PyCFunction) py_lf_time_logical_elapsed, METH_NOARGS|METH_STATIC, "Get the current elapsed logical time"},
     {"physical", (PyCFunction) py_lf_time_physical, METH_NOARGS|METH_STATIC, "Get the current physical time"},
-    {"elapsed_physical", (PyCFunction) py_lf_time_elapsed_physical, METH_NOARGS|METH_STATIC, "Get the current elapsed physical time"},
+    {"physical_elapsed", (PyCFunction) py_lf_time_physical_elapsed, METH_NOARGS|METH_STATIC, "Get the current elapsed physical time"},
     {"start", (PyCFunction) py_lf_time_start, METH_NOARGS|METH_STATIC, "Get the start time"},
     {NULL}  /* Sentinel */
 };
