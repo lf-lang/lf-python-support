@@ -86,17 +86,17 @@ PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
     tag_t other_tag = ((py_tag_t *) other)->tag;
     int c = -1;
     if (op == Py_LT) {
-        c = (lf_compare_tags(self->tag, other_tag) < 0);
+        c = (lf_tag_compare(self->tag, other_tag) < 0);
     } else if (op == Py_LE) {
-        c = (lf_compare_tags(self->tag, other_tag) <= 0);
+        c = (lf_tag_compare(self->tag, other_tag) <= 0);
     } else if (op == Py_EQ) {
-        c = (lf_compare_tags(self->tag, other_tag) == 0);
+        c = (lf_tag_compare(self->tag, other_tag) == 0);
     } else if (op == Py_NE) {
-        c = (lf_compare_tags(self->tag, other_tag) != 0);
+        c = (lf_tag_compare(self->tag, other_tag) != 0);
     } else if (op == Py_GT) {
-        c = (lf_compare_tags(self->tag, other_tag) > 0);
+        c = (lf_tag_compare(self->tag, other_tag) > 0);
     } else if (op == Py_GE) {
-        c = (lf_compare_tags(self->tag, other_tag) >= 0);
+        c = (lf_tag_compare(self->tag, other_tag) >= 0);
     }
     if (c < 0) {
         PyErr_SetString(PyExc_RuntimeError, "Invalid comparator (This statement should never be reached). ");
