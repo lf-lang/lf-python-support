@@ -62,7 +62,7 @@ PyObject* py_lf_time_logical_elapsed(PyObject *self, PyObject *args) {
  * @deprecated
  */
 PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_logical_time() is deprecated. Use lf.time.elapsed_logical() instead", 1);
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_logical_time() is deprecated. Use lf.time.logical_elapsed() instead", 1);
     return py_lf_time_logical_elapsed(self, args);
 }
 
@@ -94,7 +94,7 @@ PyObject* py_lf_time_physical_elapsed(PyObject *self, PyObject *args) {
  * @deprecated
  */
 PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_physical_time() is deprecated. Use lf.time.elapsed_physical() instead", 1);
+    PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_physical_time() is deprecated. Use lf.time.physical_elapsed() instead", 1);
     return py_lf_time_physical_elapsed(self, args);
 }
 

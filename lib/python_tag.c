@@ -55,6 +55,42 @@ static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
 }
 
 /**
+ * Compare two tags. Return -1 if the first is less than
+ * the second, 0 if they are equal, and +1 if the first is
+ * greater than the second. A tag is greater than another if
+ * its time is greater or if its time is equal and its microstep
+ * is greater.
+ * @param tag1
+ * @param tag2
+ * @return -1, 0, or 1 depending on the relation.
+ */
+PyObject* py_tag_compare(PyObject *self, PyObject *args) {
+    PyObject *tag1;
+    PyObject *tag2;
+    if (!PyArg_UnpackTuple(args, "args", 2, 2, &tag1, &tag2)) {
+        return NULL;
+    } 
+    if (!PyObject_IsInstance(tag1, (PyObject *) &PyTagType) 
+     || !PyObject_IsInstance(tag2, (PyObject *) &PyTagType)) {
+        PyErr_SetString(PyExc_TypeError, "Arguments must be Tag type.");
+        return NULL;
+    }
+    tag_t tag1_v = ((py_tag_t *) tag1)->tag;
+    tag_t tag2_v = ((py_tag_t *) tag2)->tag;
+    return PyLong_FromLong(lf_tag_compare(tag1_v, tag2_v));
+}
+
+
+/**
+ * @deprecated version of "py_tag_compare"
+ */
+PyObject* py_compare_tags(PyObject *self, PyObject *args) {
+    PyErr_WarnEx(PyExc_DeprecationWarning, "compare_tags() is deprecated. Use lf.tag_compare() instead", 1);
+    return py_tag_compare(self, args);
+}
+
+
+/**
  * Initialize the Tag object with the given values for "time" and "microstep", 
  * both of which are required.
  * @param self A py_tag_t object.
