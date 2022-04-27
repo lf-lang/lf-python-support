@@ -1,9 +1,10 @@
 /**
  * @file
  * @author Soroush Bateni (soroush@utdallas.edu)
+ * @autohr Hou Seng Wong (housengw@berkeley.edu)
  *
  * @section LICENSE
-Copyright (c) 2020, The University of California at Berkeley.
+Copyright (c) 2022, The University of California at Berkeley.
 Copyright (c) 2021, The University of Texas at Dallas.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -31,74 +32,13 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "pythontarget.h"
+#include "python_tag.c"
+#include "python_port.c"
+#include "python_action.c"
+#include "python_time.c"
 #include "core/utils/util.h"
 #include "core/tag.h"
 #include "modal_models/definitions.h"
-
-PyTypeObject TagType;
-
-//////////// set Function(s) /////////////
-
-/**
- * Set the value and is_present field of self which is of type
- * LinguaFranca.port_capsule
- * 
- * Each LinguaFranca.port_capsule includes a void* pointer of 
- * the C port (a.k.a. generic_port_instance_struct*).
- * @see generic_port_capsule_struct in pythontarget.h
- * 
- * This function calls the underlying _LF_SET API.
- * @see xtext/org.icyphy.linguafranca/src/lib/core/reactor.h
- * 
- * This function can be used to set any type of PyObject ranging from
- * primitive types to complex lists and tuples. Moreover, this function
- * is callable from Python target code by using port_name.out(value)
- * 
- * Some examples include
- *  port_name.out("Hello")
- *  port_name.out(5)
- *  port_name.out(["Hello", 5 , (2.8, "X")])
- * 
- * The port type given in the Lingua Franca is only used as a "suggestion"
- * as per Python's duck typing principles. The end-user is responsible for
- * appropriately handling types on the recieveing end of this port.
- * @param self The output port (by name) or input of a contained
- *                 reactor in form instance_name.port_name.
- * @param args contains:
- *      - val: The value to insert into the port struct.
- */
-static PyObject* py_port_set(PyObject *self, PyObject *args) {
-    generic_port_capsule_struct* p = (generic_port_capsule_struct*)self;
-    PyObject* val = NULL;
-
-    if (!PyArg_ParseTuple(args, "O", &val)) {
-        PyErr_SetString(PyExc_TypeError, "Could not set objects.");
-        return NULL;
-    }
-
-    generic_port_instance_struct* port = 
-        PyCapsule_GetPointer(p->port, "port");
-    if (port == NULL) {
-        error_print("Null pointer received.");
-        exit(1);
-    }
-    
-    if (val) {
-        DEBUG_PRINT("Setting value %p.", val);
-        Py_XDECREF(port->value);
-        Py_INCREF(val);
-        // Call the core lib API to set the port
-        _LF_SET(port, val);
-
-        Py_INCREF(val);
-        // Also set the values for the port capsule.      
-        p->value = val;
-        p->is_present = true;
-    }
-
-    Py_INCREF(Py_None);
-    return Py_None;
-}
 
 //////////// schedule Function(s) /////////////
 /**
@@ -190,90 +130,6 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
 
     Py_INCREF(Py_None);
     return Py_None;
-}
-
-
-///////// Time-keeping functions //////////
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_ELAPSED_LOGICAL));
-}
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_LOGICAL));
-}
-
-/** 
- * Return the current tag object.
- */
-static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
-    py_tag_t *t = (py_tag_t *) PyType_GenericNew(&TagType, NULL, NULL);
-    if (t == NULL) {
-        return NULL;
-    }
-    t->tag = lf_tag();
-    return (PyObject *) t;
-}
-
-/**
- * Compare two tags. Return -1 if the first is less than
- * the second, 0 if they are equal, and +1 if the first is
- * greater than the second. A tag is greater than another if
- * its time is greater or if its time is equal and its microstep
- * is greater.
- * @param tag1
- * @param tag2
- * @return -1, 0, or 1 depending on the relation.
- */
-static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
-    PyObject *tag1;
-    PyObject *tag2;
-    if (!PyArg_UnpackTuple(args, "args", 2, 2, &tag1, &tag2)) {
-        return NULL;
-    } 
-    if (!PyObject_IsInstance(tag1, (PyObject *) &TagType) 
-     || !PyObject_IsInstance(tag2, (PyObject *) &TagType)) {
-        PyErr_SetString(PyExc_TypeError, "Arguments must be Tag type.");
-        return NULL;
-    }
-    tag_t tag1_v = ((py_tag_t *) tag1)->tag;
-    tag_t tag2_v = ((py_tag_t *) tag2)->tag;
-    return PyLong_FromLong(lf_compare_tags(tag1_v, tag2_v));
-}
-
-
-/**
- * Return the current microstep.
- */
-static PyObject* py_get_microstep(PyObject *self, PyObject *args) {
-    return PyLong_FromUnsignedLong(lf_tag().microstep);
-}
-
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_PHYSICAL));
-}
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_ELAPSED_PHYSICAL));
-}
-
-/**
- * Return the start time in nanoseconds.
- */
-static PyObject* py_get_start_time(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_START));
 }
 
 /**
@@ -408,540 +264,6 @@ static PyObject* py_main(PyObject* self, PyObject* py_args) {
     return Py_None;
 }
 
-
-///////////////// Functions used in port creation, initialization, deletion, and copying /////////////
-/**
- * Called when a port_capsule has to be deallocated (generally by the Python
- * garbage collector).
- * @param self An instance of generic_port_instance_struct*
- */
-static void
-port_capsule_dealloc(generic_port_capsule_struct *self) {
-    Py_XDECREF(self->port);
-    Py_XDECREF(self->value);
-    Py_TYPE(self)->tp_free((PyObject *) self);
-}
-
-/**
- * Create a new port_capsule. Note that a LinguaFranca.port_capsule PyObject
- * follows the same structure as the @see generic_port_capsule_struct.
- * 
- * To initialize the port_capsule, this function first initializes a 
- * generic_port_capsule_struct* self using the tp_alloc property of 
- * port_capsule (@see port_capsule_t) and then assigns the members
- * of self with default values of port= NULL, value = NULL, is_present = false,
- * current_index = 0, width = -2.
- * @param type The Python type object. In this case, port_capsule_t
- * @param args The optional arguments that are:
- *      - port: A capsule that holds a void* to the underlying C port
- *      - value: value of the port
- *      - is_present: An indication of whether or not the value of the port
- *                       is present at the current logical time.
- *      - current_index: Used to reference multiports in the iterator
- *      - width: Used to indicate the width of a multiport. If the port
- *                   is not a multiport, this field will be -2.
- * @param kwds Keywords (@see Python keywords)
- */
-static PyObject *
-port_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    generic_port_capsule_struct *self;
-    self = (generic_port_capsule_struct *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->port = NULL;
-        Py_INCREF(Py_None);
-        self->value = Py_None;
-        self->is_present = false;
-        self->current_index = 0;
-        self->width = -2;
-    }
-    return (PyObject *) self;
-}
-
-/**
- * Return an iterator for self, which is a port.
- * This function just have to exist to tell Python that ports are iterable.
- * 
- * For example to make
- *     for p in foo_multiport:
- *         p.set(42)
- * possible in Python.
- */
-static PyObject *
-port_iter(PyObject *self) {
-  generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
-  port->current_index = 0;
-  Py_INCREF(self);
-  return self;
-}
-
-/**
- * The function that is responsible for getting the next item in the iterator for a multiport.
- * 
- * This would make the following code possible in the Python target:
- *     for p in foo_multiport:
- *         p.set(42)
- */
-static PyObject *
-port_iter_next(PyObject *self) {
-    generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
-    generic_port_capsule_struct* pyport = (generic_port_capsule_struct*)self->ob_type->tp_new(self->ob_type, NULL, NULL);
-
-    if (port->width < 1) {
-        PyErr_Format(PyExc_TypeError,
-                "Non-multiport type is not iteratable.");
-        return NULL;
-    }
-
-    if (port->current_index >= port->width) {
-        port->current_index = 0;
-        return NULL;
-    }
-
-    generic_port_instance_struct **cport = 
-        (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
-    if (cport == NULL) {
-        error_print_and_exit("Null pointer received.");
-    }
-
-    // Py_XINCREF(cport[index]->value);
-    pyport->port = PyCapsule_New(cport[port->current_index], "port", NULL);
-    pyport->value = cport[port->current_index]->value;
-    pyport->is_present = cport[port->current_index]->is_present;
-    pyport->width = -2;
-
-    port->current_index++;
-
-    if (pyport->value == NULL) {
-        Py_INCREF(Py_None);
-        pyport->value = Py_None;
-    }
-
-    Py_XINCREF(pyport);
-    return (PyObject*)pyport;
-}
-/**
- * Get an item from a Linugua Franca port capsule type.
- * If a port is a not a multiport, it will have a width of
- * -2 (@see CGenerator.xtend). In this case, this function will
- * return the port capsule itself.
- * If a port is a multiport, this function will convert the index
- * item and convert it into a C long long, and use it to access
- * the underlying array stored in the PyCapsule as "port". A new
- * non-multiport capsule is created and returned, which in turn can be
- * used as an ordinary LinguaFranca.port_capsule.
- * @param self The port which can be a multiport or a singular port
- * @param key The index (key) which is used to retrieve an item from the underlying
- *             C array if the port is a multiport.
- */
-static PyObject *
-port_capsule_get_item(PyObject *self, PyObject *key) {
-    generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
-
-    // Port is not a multiport
-    if (port->width == -2) {
-        return self;
-    }
-
-    if (PyObject_TypeCheck(key, &PyLong_Type) == 0) {
-        PyErr_Format(PyExc_TypeError,
-                     "Multiport indices must be integers, not %.200s",
-                     Py_TYPE(key)->tp_name);
-        return NULL;
-    }
-
-    generic_port_capsule_struct* pyport = 
-        (generic_port_capsule_struct*)self->ob_type->tp_new(self->ob_type, NULL, NULL);
-    long long index = -3;
-
-    index = PyLong_AsLong(key);
-    if (index == -3) {
-        PyErr_Format(PyExc_TypeError,
-                     "Multiport indices must be integers, not %.200s",
-                     Py_TYPE(key)->tp_name);
-        return NULL;
-    }
-
-    generic_port_instance_struct **cport = 
-        (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
-    if (cport == NULL) {
-        error_print_and_exit("Null pointer received.");
-    }
-
-    // Py_INCREF(cport[index]->value);
-    pyport->port = PyCapsule_New(cport[index], "port", NULL);
-    pyport->value = cport[index]->value;
-    pyport->is_present = cport[index]->is_present;
-    pyport->width = -2;
-
-
-    LOG_PRINT("Getting item index %d. Is present is %d.", index, pyport->is_present);
-
-    
-    if (pyport->value == NULL) {
-        Py_INCREF(Py_None);
-        pyport->value = Py_None;
-    }
-
-    //Py_INCREF(((generic_port_capsule_struct*)port)->value);
-    Py_XINCREF(pyport);
-    //Py_INCREF(self);
-    return (PyObject*)pyport;
-}
-
-/**
- * This function is overloaded to prevent directly assigning to multiports.
- * The set function currently is the only way to assign value to ports.
- * @param self The port of type LinguaFranca.port_capsule
- * @param item The index (which is ignored)
- * @param value The value to be assigned (which is ignored)
- */
-static int
-port_capsule_assign_get_item(PyObject *self, PyObject *item, PyObject* value) {
-    PyErr_Format(PyExc_TypeError,
-                     "You cannot assign to ports directly. Please use the .set method.",
-                     Py_TYPE(item)->tp_name);
-    return -1;
-}
-
-/**
- * A function that allows the invocation of len() on a port.
- * @param self A port of type LinguaFranca.port_capsule
- */ 
-static Py_ssize_t
-port_length(PyObject *self) {
-    generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
-    DEBUG_PRINT("Getting the length, which is %d.", port->width);
-    return (Py_ssize_t)port->width;
-}
-
-/**
- * Methods that convert a LinguaFranca.port_capsule into a mapping,
- * which allows it to be subscriptble.
- */ 
-static PyMappingMethods port_as_mapping = {    
-    (lenfunc)port_length,
-    (binaryfunc)port_capsule_get_item,
-    (objobjargproc)port_capsule_assign_get_item
-};
-
-/**
- * Initialize the port capsule self with the given optional values for
- * port, value, is_present, and num_destinations. If any of these arguments
- * are missing, the default values are assigned
- * @see port_intance_new 
- * @param self The port_instance PyObject that follows
- *              the generic_port_instance_struct* internal structure
- * @param args The optional arguments that are:
- *      - port: A capsule that holds a void* to the underlying C port
- *      - value: value of the port
- *      - is_present: An indication of whether or not the value of the port
- *                       is present at the current logical time.
- *      - current_index: Used to reference multiports in the iterator
- *      - width: Used to indicate the width of a multiport. If the port
- *                   is not a multiport, this field will be -2.
- */
-static int
-port_capsule_init(generic_port_capsule_struct *self, PyObject *args, PyObject *kwds) {
-    static char *kwlist[] = { "port", "value", "is_present", "width", "current_index", NULL};
-    PyObject *value = NULL, *tmp, *port = NULL;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOp", kwlist,
-                                     &port, &value, &self->is_present, &self->width, &self->current_index))
-    {
-        return -1;
-    }
-
-    if (value){
-        tmp = self->value;
-        Py_INCREF(value);
-        self->value = value;
-        Py_XDECREF(tmp);
-    }
-    
-    if (port){
-        tmp = self->port;
-        Py_INCREF(port);
-        self->port = port;
-        Py_XDECREF(tmp);
-    }
-
-    return 0;
-}
-
-
-///////////////// Functions used in action creation, initialization and deletion /////////////
-/**
- * Called when an action in Python is deallocated (generally
- * called by the Python grabage collector).
- * @param self
- */
-static void
-action_capsule_dealloc(generic_action_capsule_struct *self) {
-    Py_XDECREF(self->action);
-    Py_XDECREF(self->value);
-    Py_TYPE(self)->tp_free((PyObject *) self);
-}
-
-/**
- * Called when an action in Python is to be created. Note that LinguaFranca.action_capsule
- * follows the same structure as the @see generic_action_capsule_struct.
- * 
- * To initialize the action_capsule, this function first calls the tp_alloc
- * method of type action_capsule_t and then assign default values of NULL, NULL, 0
- * to the members of the generic_action_capsule_struct.
- */
-static PyObject *
-action_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kwds) {
-    generic_action_capsule_struct *self;
-    self = (generic_action_capsule_struct *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->action = NULL;
-        self->value = NULL;
-        self->is_present = false;
-    }
-    
-    return (PyObject *) self;
-}
-
-/**
- * Initialize the action capsule "self" with the given optional values for
- * action (void *), value (PyObject*), and is_present (bool). If any of these arguments
- * are missing, the default values are assigned.
- * 
- * @see port_intance_new 
- * @param self The port_instance PyObject that follows
- *              the generic_port_instance_struct* internal structure
- * @param args The optional arguments that are:
- *      - action: The void * pointer to a C action instance struct
- *      - value: value of the port
- *      - is_present: An indication of whether or not the value of the port
- *                      is present at the current logical time.
- *      - num_destination: Used for reference-keeping inside the C runtime
- */
-static int
-action_capsule_init(generic_action_capsule_struct *self, PyObject *args, PyObject *kwds) {
-    static char *kwlist[] = {"action", "value", "is_present", NULL};
-    PyObject *action = NULL, *value = NULL, *tmp;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOi", kwlist,
-                                     &action, &value, &self->is_present)) {
-        return -1;
-    }
-    
-    if (action) {
-        tmp = self->action;
-        Py_INCREF(action);
-        self->action = action;
-        Py_XDECREF(tmp);
-    }
-
-    if (value) {
-        tmp = self->value;
-        Py_INCREF(value);
-        self->value = value;
-        Py_XDECREF(tmp);
-    }
-
-    return 0;
-}
-
-
-///////////////// Functions used in Tag creation, initialization and deletion /////////////
-/**
- * Initialize the Tag object with the given values for "time" and "microstep", 
- * both of which are required.
- * @param self A py_tag_t object.
- * @param args The arguments are:
- *      - time: A logical time.
- *      - microstep: A microstep within the logical time "time".
- */
-static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
-    static char *kwlist[] = {"time", "microstep", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist, &(self->tag.time), &(self->tag.microstep))) {
-        return -1;
-    }
-    return 0;
-}
-
-/**
- * Rich compare function for Tag objects. Used in .tp_richcompare.
- * 
- * @param self A py_tag_t object on the left side of the operator.
- * @param other A py_tag_t object on the right side of the operator.
- * @param op the comparison operator
- */
-static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
-    if (!PyObject_IsInstance(other, (PyObject *) &TagType)) {
-        PyErr_SetString(PyExc_TypeError, "Cannot compare a Tag with a non-Tag type.");
-        return NULL;
-    }
-
-    tag_t other_tag = ((py_tag_t *) other)->tag;
-    int c = -1;
-    if (op == Py_LT) {
-        c = (compare_tags(self->tag, other_tag) < 0);
-    } else if (op == Py_LE) {
-        c = (compare_tags(self->tag, other_tag) <= 0);
-    } else if (op == Py_EQ) {
-        c = (compare_tags(self->tag, other_tag) == 0);
-    } else if (op == Py_NE) {
-        c = (compare_tags(self->tag, other_tag) != 0);
-    } else if (op == Py_GT) {
-        c = (compare_tags(self->tag, other_tag) > 0);
-    } else if (op == Py_GE) {
-        c = (compare_tags(self->tag, other_tag) >= 0);
-    }
-    if (c < 0) {
-        PyErr_SetString(PyExc_RuntimeError, "Invalid comparator (This statement should never be reached). ");
-        return NULL;
-    } else if (c) {
-        Py_RETURN_TRUE;
-    } else {
-        Py_RETURN_FALSE;
-    }
-}
-
-
-//////////////////////////////////////////////////////////////
-/////////////  Python Structs
-
-////// Ports //////
-/*
- * The members of a port_capsule, used to define
- * a native Python type.
- * port contains the port capsule, which holds a void* pointer to the underlying C port.
- * value contains the copied value of the C port. The type is always PyObject*.
- * is_present contains the copied value of the is_present field of the C port.
- * width indicates the width of a multiport or -2 if not a multiport.
- */
-static PyMemberDef port_capsule_members[] = {
-    {"port", T_OBJECT, offsetof(generic_port_capsule_struct, port), READONLY, ""},
-    {"value", T_OBJECT, offsetof(generic_port_capsule_struct, value), READONLY, "Value of the port"},
-    {"is_present", T_BOOL, offsetof(generic_port_capsule_struct, is_present), READONLY, "Check if value is present at current logical time"},
-    {"width", T_INT, offsetof(generic_port_capsule_struct, width), READONLY, "Width of the multiport"},    
-    {NULL}  /* Sentinel */
-};
-
-/*
- * The function members of port_capsule
- * __getitem__ is used to reference a multiport with an index (e.g., foo[2])
- * set is used to set a port value and its is_present field.
- */
-static PyMethodDef port_capsule_methods[] = {
-    {"__getitem__", (PyCFunction)port_capsule_get_item, METH_O|METH_COEXIST, "x.__getitem__(y) <==> x[y]"},
-    {"set", (PyCFunction)py_port_set, METH_VARARGS, "Set value of the port as well as the is_present field"},
-    {NULL}  /* Sentinel */
-};
-
-
-/*
- * The definition of port_capsule type object, which is
- * used to describe how port_capsule behaves.
- */
-static PyTypeObject port_capsule_t = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "LinguaFranca.port_capsule",
-    .tp_doc = "port_capsule objects",
-    .tp_basicsize = sizeof(generic_port_capsule_struct),
-    .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_as_mapping = &port_as_mapping,
-    .tp_iter = port_iter,
-    .tp_iternext = port_iter_next,
-    .tp_new = port_capsule_new,
-    .tp_init = (initproc) port_capsule_init,
-    .tp_dealloc = (destructor) port_capsule_dealloc,
-    .tp_members = port_capsule_members,
-    .tp_methods = port_capsule_methods,
-};
-
-
-//// Actions /////
-/*
- * The members of a action_capsule that are accessible from a Python program, used to define
- * a native Python type.
- */
-static PyMemberDef action_capsule_members[] = {
-    {"action", T_OBJECT, offsetof(generic_action_capsule_struct, action), 0, "The pointer to the C action struct"},
-    {"value", T_OBJECT, offsetof(generic_action_capsule_struct, value), 0, "Value of the action"},
-    {"is_present", T_BOOL, offsetof(generic_action_capsule_struct, is_present), 0, "Check that shows if action is present"},
-    {NULL}  /* Sentinel */
-};
-
-
-/**
- * The function members of action capsule
- */
-static PyMethodDef action_capsule_methods[] = {
-    {"schedule", (PyCFunction)py_schedule, METH_VARARGS, "Schedule the action with the given offset"},
-    {NULL}  /* Sentinel */
-};
-
-/*
- * The definition of action_capsule type object.
- * Used to describe how an action_capsule behaves.
- */
-static PyTypeObject action_capsule_t = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "LinguaFranca.action_instance",
-    .tp_doc = "action_instance object",
-    .tp_basicsize = sizeof(generic_action_capsule_struct),
-    .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_new = action_capsule_new,
-    .tp_init = (initproc) action_capsule_init,
-    .tp_dealloc = (destructor) action_capsule_dealloc,
-    .tp_members = action_capsule_members,
-    .tp_methods = action_capsule_methods,
-};
-
-
-//// Tag /////
-/**
- * Link names to getter functions.
- * Getters are used when the variable name specified are referenced with a ".".
- * For example:
- * >>> t = Tag(time=1, microstep=2)
- * >>> t.time   # calls Tag_get_time.
- * >>> t.microstep  # calls Tag_get_microstep.
- * >>> t.time = 1  # illegal since setters are omitted.
- **/
-static PyGetSetDef Tag_getsetters[] = {
-    {"time", (getter) Tag_get_time},
-    {"microstep", (getter) Tag_get_microstep},
-    {NULL}  /* Sentinel */
-};
-
-/**
- * Definition of the TagType Object. 
- **/
-PyTypeObject TagType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "LinguaFranca.Tag",
-    .tp_doc = "Tag object",
-    .tp_basicsize = sizeof(py_tag_t),
-    .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_new = PyType_GenericNew,
-    .tp_init = (initproc) Tag_init,
-    .tp_richcompare = (richcmpfunc) Tag_richcompare,
-    .tp_getset = Tag_getsetters,
-};
-
-/**
- * Tag getter for the "time" attribute
- **/
-static PyObject* Tag_get_time(py_tag_t *self, void *closure) {
-    return PyLong_FromLongLong(self->tag.time);
-}
-
-/**
- * Tag getter for the "microstep" attribute
- **/
-static PyObject* Tag_get_microstep(py_tag_t *self, void *closure) {
-    return PyLong_FromUnsignedLong(self->tag.microstep);
-}
-
 ///// Python Module Built-ins
 /**
  * Bind Python function names to the C functions.
@@ -961,14 +283,16 @@ static PyObject* Tag_get_microstep(py_tag_t *self, void *closure) {
 static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"start", py_main, METH_VARARGS, NULL},
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
-  {"get_elapsed_logical_time", py_get_elapsed_logical_time, METH_NOARGS, NULL},
   {"get_logical_time", py_get_logical_time, METH_NOARGS, NULL},
-  {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
-  {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
-  {"compare_tags", py_compare_tags, METH_VARARGS, NULL},
+  {"get_elapsed_logical_time", py_get_elapsed_logical_time, METH_NOARGS, NULL},
   {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
   {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
   {"get_start_time", py_get_start_time, METH_NOARGS, NULL},
+  {"tag", py_lf_tag, METH_NOARGS, NULL},
+  {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
+  {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
+  {"compare_tags", py_compare_tags, METH_VARARGS, NULL},
+  {"tag_compare", py_tag_compare, METH_VARARGS, NULL},
   {"request_stop", py_request_stop, METH_NOARGS, NULL},
   {NULL, NULL, 0, NULL}
 };
@@ -1002,17 +326,22 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
     PyObject *m;
 
     // Initialize the port_capsule type
-    if (PyType_Ready(&port_capsule_t) < 0) {
+    if (PyType_Ready(&py_port_capsule_t) < 0) {
         return NULL;
     }
 
     // Initialize the action_capsule type
-    if (PyType_Ready(&action_capsule_t) < 0) {
+    if (PyType_Ready(&py_action_capsule_t) < 0) {
         return NULL;
     }
 
     // Initialize the Tag type
-    if (PyType_Ready(&TagType) < 0) {
+    if (PyType_Ready(&PyTagType) < 0) {
+        return NULL;
+    }
+
+    // Initialize the Time type
+    if (PyType_Ready(&PyTimeType) < 0) {
         return NULL;
     }
 
@@ -1025,26 +354,34 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
     initialize_mode_capsule_t(m);
 
     // Add the port_capsule type to the module's dictionary
-    Py_INCREF(&port_capsule_t);
-    if (PyModule_AddObject(m, "port_capsule", (PyObject *) &port_capsule_t) < 0) {
-        Py_DECREF(&port_capsule_t);
+    Py_INCREF(&py_port_capsule_t);
+    if (PyModule_AddObject(m, "port_capsule", (PyObject *) &py_port_capsule_t) < 0) {
+        Py_DECREF(&py_port_capsule_t);
         Py_DECREF(m);
         return NULL;
     }
 
 
     // Add the action_capsule type to the module's dictionary
-    Py_INCREF(&action_capsule_t);
-    if (PyModule_AddObject(m, "action_capsule_t", (PyObject *) &action_capsule_t) < 0) {
-        Py_DECREF(&action_capsule_t);
+    Py_INCREF(&py_action_capsule_t);
+    if (PyModule_AddObject(m, "action_capsule_t", (PyObject *) &py_action_capsule_t) < 0) {
+        Py_DECREF(&py_action_capsule_t);
         Py_DECREF(m);
         return NULL;
     }
 
     // Add the Tag type to the module's dictionary
-    Py_INCREF(&TagType);
-    if (PyModule_AddObject(m, "Tag", (PyObject *) &TagType) < 0) {
-        Py_DECREF(&TagType);
+    Py_INCREF(&PyTagType);
+    if (PyModule_AddObject(m, "Tag", (PyObject *) &PyTagType) < 0) {
+        Py_DECREF(&PyTagType);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    // Add the Time type to the module's dictionary
+    Py_INCREF(&PyTimeType);
+    if (PyModule_AddObject(m, "time", (PyObject *) &PyTimeType) < 0) {
+        Py_DECREF(&PyTimeType);
         Py_DECREF(m);
         return NULL;
     }
@@ -1087,7 +424,7 @@ PyObject* convert_C_port_to_py(void* port, int width) {
     }
     // Create the port struct in Python
     PyObject* cap = 
-        (PyObject*)PyObject_GC_New(generic_port_capsule_struct, &port_capsule_t);
+        (PyObject*)PyObject_GC_New(generic_port_capsule_struct, &py_port_capsule_t);
     if (cap == NULL) {
         error_print_and_exit("Failed to convert port.");
     }
@@ -1154,7 +491,7 @@ PyObject* convert_C_action_to_py(void* action) {
     trigger_t* trigger = _lf_action_to_trigger(action);
 
     // Create the action struct in Python
-    PyObject* cap = (PyObject*)PyObject_GC_New(generic_action_capsule_struct, &action_capsule_t);
+    PyObject* cap = (PyObject*)PyObject_GC_New(generic_action_capsule_struct, &py_action_capsule_t);
     if (cap == NULL) {
         error_print_and_exit("Failed to convert action.");
     }

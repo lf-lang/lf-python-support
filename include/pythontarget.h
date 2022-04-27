@@ -2,6 +2,7 @@
  * @file
  * @author Edward A. Lee (eal@berkeley.edu)
  * @author Soroush Bateni (soroush@utdallas.edu)
+ * @author Hou Seng Wong (housengw@berkeley.edu)
  *
  * @section LICENSE
 Copyright (c) 2020, The University of California at Berkeley.
@@ -47,9 +48,11 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 #include <structmember.h>
-#include "ctarget_schedule.h"
-
 #include <limits.h>
+#include "ctarget_schedule.h"
+#include "python_tag.h"
+#include "python_port.h"
+#include "python_action.h"
 
 #ifdef _MSC_VER
 #ifndef PATH_MAX
@@ -81,193 +84,6 @@ PyObject *globalPythonModuleDict = NULL;
 // Import pickle to enable native serialization
 static PyObject* global_pickler = NULL;
 
-#ifdef FEDERATED
-#ifdef FEDERATED_DECENTRALIZED
-#define FEDERATED_CAPSULE_EXTENSION \
-    tag_t intended_tag; \
-    instant_t physical_time_of_arrival;
-#else // FEDERATED_CENTRALIZED
-#define FEDERATED_CAPSULE_EXTENSION \
-    instant_t physical_time_of_arrival;
-#endif // FEDERATED_DECENTRALIZED
-#else  // not FEDERATED
-#define FEDERATED_CAPSULE_EXTENSION // Empty
-#endif // FEDERATED
-
-/**
- * The struct used to instantiate a port
- * in Lingua Franca. This is used 
- * in the PythonGenerator instead of redefining
- * a struct for each port.
- * This can be used for any Python object,
- * including lists and tuples.
- * PyObject* value: the value of the port with the generic Python type
- * is_present: indicates if the value of the port is present
- *             at the current logical time
- * num_destinations: used for reference counting the number of
- *                   connections to destinations.
- **/
-typedef struct {
-    PyObject* value;
-    bool is_present;
-    int num_destinations;
-    lf_token_t* token;
-    int length;
-    void (*destructor) (void* value);
-    void* (*copy_constructor) (void* value);
-    FEDERATED_CAPSULE_EXTENSION
-} generic_port_instance_struct;
-
-/**
- * The struct used to instantiate an action.
- * This is used 
- * in the PythonGenerator instead of redefining
- * a struct for each action.
- * This can be used for any Python object,
- * including lists and tuples.
- * PyObject* value: the value of the action with the generic Python type
- * is_present: indicates if the action is present
- *             at the current logical time
- **/
-typedef struct {
-    trigger_t* trigger;
-    PyObject* value;
-    bool is_present;
-    bool has_value;
-    lf_token_t* token;
-    FEDERATED_CAPSULE_EXTENSION
-} generic_action_instance_struct;
-
-/**
- * The struct used to represent ports in Python 
- * This template is used as a blueprint to create
- * Python objects that follow the same structure.
- * The resulting Python object will have the type 
- * port_capsule_t in C (LinguaFranca.port_capsule in Python).
- * 
- * port: A PyCapsule (https://docs.python.org/3/c-api/capsule.html)
- *       that safely holds a C void* inside a Python object. This capsule
- *       is passed through the Python code and is extracted in C functions
- *       like set and __getitem__.
- * value: The value of the port at the time of invocation of @see convert_C_port_to_py.
- *        The value and is_present are copied from the port if it is not a multiport and can be accessed as
- *        port.value. For multiports, is_present will be false and value will be None. The value of each individual
- *        port can be accessed as port[idx].value (@see port_capsule_get_item). 
- *        Subsequent calls to set will also need to update the value and is_present fields so that they are reflected
- *        in Python code.
- * is_present: Indicates if the value of the singular port is present
- *             at the current logical time
- * width: Indicates the width of the multiport. This is set to -2 for non-multiports.
- * current_index: Used to facilitate iterative functions (@see port_iter)
- **/
-typedef struct {
-    PyObject_HEAD
-    PyObject* port;
-    PyObject* value;
-    bool is_present;
-    int width;
-    long current_index;
-    FEDERATED_CAPSULE_EXTENSION
-} generic_port_capsule_struct;
-
-/**
- * Python wrapper for the tag_t struct in the C target.
- **/
-typedef struct {
-    PyObject_HEAD
-    tag_t tag;
-} py_tag_t;
-
-/**
- * Tag getter for the "time" attribute
- **/
-static PyObject* Tag_get_time(py_tag_t *self, void *closure);
-
-/**
- * Tag getter for the "microstep" attribute
- **/
-static PyObject* Tag_get_microstep(py_tag_t *self, void *closure);
-
-/**
- * Initialize the Tag object with the given values for "time" and "microstep", 
- * both of which are required.
- * same as __init__()
- * 
- * @param self A py_tag_t object.
- * @param args The arguments are:
- *      - time: A logical time.
- *      - microstep: A microstep within the logical time "time".
- */
-static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds);
-
-/**
- * Rich compare function for Tag objects. Used in .tp_richcompare.
- * 
- * @param self A py_tag_t object on the left side of the operator.
- * @param other A py_tag_t object on the right side of the operator.
- * @param op the comparison operator
- */
-static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op);
-
-/**
- * The struct used to hold an action
- * that is sent to a Python reaction.
- * 
- * The "action" field holds a PyCapsule of the
- * void * pointer to an action.
- * 
- * The "value" field holds the action value
- * if anything is given. This value is copied over
- * from action->value each time an action is passed
- * to a Python reaction.
- * 
- * The "is_present" field is copied over
- * from action->value each time an action is passed
- * to a Python reaction.
- **/
-typedef struct {
-    PyObject_HEAD
-    PyObject* action; // Hold the void* pointer to a C action instance. However, passing void* directly
-                      // to Python is considered unsafe practice. Instead, this void* pointer to the C action
-                      // will be stored in a PyCapsule. @see https://docs.python.org/3/c-api/capsule.html
-    PyObject* value; // This value will be copied from the C action->value
-    bool is_present; // Same as value, is_present will be copied from the C action->is_present
-    FEDERATED_CAPSULE_EXTENSION
-} generic_action_capsule_struct;
-
-//////////////////////////////////////////////////////////////
-/////////////  SET Functions (to produce an output)
-
-/**
- * Set the value and is_present field of self which is of type
- * LinguaFranca.port_capsule
- * 
- * Each LinguaFranca.port_capsule includes a void* pointer of 
- * the C port (a.k.a. generic_port_instance_struct*).
- * @see generic_port_capsule_struct in pythontarget.h
- * 
- * This function calls the underlying _LF_SET API.
- * @see xtext/org.icyphy.linguafranca/src/lib/core/reactor.h
- * 
- * This function can be used to set any type of PyObject ranging from
- * primitive types to complex lists and tuples. Moreover, this function
- * is callable from Python target code by using port_name.out(value)
- * 
- * Some examples include
- *  port_name.out("Hello")
- *  port_name.out(5)
- *  port_name.out(["Hello", 5 , (2.8, "X")])
- * 
- * The port type given in the Lingua Franca is only used as a "suggestion"
- * as per Python's duck typing principles. The end-user is responsible for
- * appropriately handling types on the receiving end of this port.
- * @param self The output port (by name) or input of a contained
- *                 reactor in form input_name.port_name.
- * @param args contains:
- *      - val: The value to insert into the port struct.
- */
-static PyObject* py_port_set(PyObject *self, PyObject *args);
-
 //////////////////////////////////////////////////////////////
 /////////////  schedule Functions (to schedule an action)
 /**
@@ -291,54 +107,6 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args);
 
 //////////////////////////////////////////////////////////////
 /////////////  Python Helper Functions (called from Python code)
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args);
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_logical_time(PyObject *self, PyObject *args);
-
-
-/** 
- * Return the current tag as a Tag object.
- */
-static PyObject* py_get_current_tag(PyObject *self, PyObject *args);
-
-/**
- * Compare two tags. Return -1 if the first is less than
- * the second, 0 if they are equal, and +1 if the first is
- * greater than the second. A tag is greater than another if
- * its time is greater or if its time is equal and its microstep
- * is greater.
- * @param tag1
- * @param tag2
- * @return -1, 0, or 1 depending on the relation.
- */
-static PyObject* py_compare_tags(PyObject *self, PyObject *args);
-
-/**
- * Return the current microstep.
- */
-static PyObject* py_get_microstep(PyObject *self, PyObject *args);
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-static PyObject* py_get_physical_time(PyObject *self, PyObject *args);
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- */
-instant_t get_elapsed_physical_time();
-static PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args);
-
-/**
- * Return the start time in nanoseconds.
- */
-static PyObject* py_get_start_time(PyObject *self, PyObject *args);
 
 /**
  * Stop execution at the conclusion of the current logical time.
