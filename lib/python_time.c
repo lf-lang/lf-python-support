@@ -38,7 +38,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Return the logical time in nanoseconds.
  */
 PyObject* py_lf_time_logical(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_LOGICAL));
+    return PyLong_FromLongLong(_lf_time(LF_LOGICAL));
 }
 
 /** 
@@ -54,7 +54,7 @@ PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
  * Return the elapsed logical time in nanoseconds.
  */
 PyObject* py_lf_time_elapsed_logical(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_ELAPSED_LOGICAL));
+    return PyLong_FromLongLong(_lf_time(LF_ELAPSED_LOGICAL));
 }
 
 /** 
@@ -70,7 +70,7 @@ PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args) {
  * Return the physical time in nanoseconds.
  */
 PyObject* py_lf_time_physical(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_PHYSICAL));
+    return PyLong_FromLongLong(_lf_time(LF_PHYSICAL));
 }
 
 /** 
@@ -86,7 +86,7 @@ PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
  * Return the elapsed physical time in nanoseconds.
  */
 PyObject* py_lf_time_elapsed_physical(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_ELAPSED_PHYSICAL));
+    return PyLong_FromLongLong(_lf_time(LF_ELAPSED_PHYSICAL));
 }
 
 /** 
@@ -102,7 +102,7 @@ PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
  * Return the start time in nanoseconds.
  */
 PyObject* py_lf_time_start(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(lf_time(LF_START));
+    return PyLong_FromLongLong(_lf_time(LF_START));
 }
 
 /**

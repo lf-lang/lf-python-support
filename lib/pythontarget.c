@@ -155,7 +155,7 @@ static PyObject* py_compare_tags(PyObject *self, PyObject *args) {
     }
     tag_t tag1_v = ((py_tag_t *) tag1)->tag;
     tag_t tag2_v = ((py_tag_t *) tag2)->tag;
-    return PyLong_FromLong(lf_compare_tags(tag1_v, tag2_v));
+    return PyLong_FromLong(lf_tag_compare(tag1_v, tag2_v));
 }
 
 /**
