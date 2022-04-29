@@ -49,7 +49,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Python.h>
 #include <structmember.h>
 #include <limits.h>
-#include "ctarget_schedule.h"
+#include "ctarget/schedule.h"
 #include "python_tag.h"
 #include "python_port.h"
 #include "python_action.h"
