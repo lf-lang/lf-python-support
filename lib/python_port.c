@@ -81,7 +81,7 @@ PyObject* py_port_set(PyObject *self, PyObject *args) {
     }
     
     if (val) {
-        DEBUG_PRINT("Setting value %p.", val);
+        LF_PRINT_DEBUG("Setting value %p.", val);
         Py_XDECREF(port->value);
         Py_INCREF(val);
         // Call the core lib API to set the port
@@ -256,7 +256,7 @@ PyObject *py_port_capsule_get_item(PyObject *self, PyObject *key) {
     pyport->width = -2;
 
 
-    LOG_PRINT("Getting item index %d. Is present is %d.", index, pyport->is_present);
+    LF_PRINT_LOG("Getting item index %d. Is present is %d.", index, pyport->is_present);
 
     
     if (pyport->value == NULL) {
@@ -290,7 +290,7 @@ int py_port_capsule_assign_get_item(PyObject *self, PyObject *item, PyObject* va
  */ 
 Py_ssize_t py_port_length(PyObject *self) {
     generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
-    DEBUG_PRINT("Getting the length, which is %d.", port->width);
+    LF_PRINT_DEBUG("Getting the length, which is %d.", port->width);
     return (Py_ssize_t)port->width;
 }
 
