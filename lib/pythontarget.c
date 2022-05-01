@@ -235,7 +235,7 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
  */
 static PyObject* py_main(PyObject* self, PyObject* py_args) {
 
-    DEBUG_PRINT("Initializing main.");
+    LF_PRINT_DEBUG("Initializing main.");
 
     size_t argc;
     char** argv = _lf_py_parse_argv_impl(py_args, &argc);
@@ -254,7 +254,7 @@ static PyObject* py_main(PyObject* self, PyObject* py_args) {
         }
     }
 
-    DEBUG_PRINT("Initialized the Python interpreter.");
+    LF_PRINT_DEBUG("Initialized the Python interpreter.");
 
     Py_BEGIN_ALLOW_THREADS
     lf_reactor_c_main(argc, argv);
@@ -546,7 +546,7 @@ PyObject* convert_C_action_to_py(void* action) {
  */
 PyObject*
 get_python_function(string module, string class, int instance_id, string func) {
-    DEBUG_PRINT("Starting the function start().");
+    LF_PRINT_DEBUG("Starting the function start().");
 
     // Necessary PyObject variables to load the react() function from test.py
     PyObject* pFileName = NULL;
@@ -583,11 +583,11 @@ get_python_function(string module, string class, int instance_id, string func) {
 
         Py_SetPath(wcwd);
 
-        DEBUG_PRINT("Loading module %s in %s.", module, cwd);
+        LF_PRINT_DEBUG("Loading module %s in %s.", module, cwd);
 
         pModule = PyImport_Import(pFileName);
 
-        DEBUG_PRINT("Loaded module %p.", pModule);
+        LF_PRINT_DEBUG("Loaded module %p.", pModule);
 
         // Free the memory occupied by pFileName
         Py_DECREF(pFileName);
@@ -639,17 +639,17 @@ get_python_function(string module, string class, int instance_id, string func) {
             return NULL;
         }
 
-        DEBUG_PRINT("Loading function %s.", func);
+        LF_PRINT_DEBUG("Loading function %s.", func);
 
         // Get the function react from test.py
         pFunc = PyObject_GetAttrString(pClass, func);
 
-        DEBUG_PRINT("Loaded function %p.", pFunc);
+        LF_PRINT_DEBUG("Loaded function %p.", pFunc);
 
         // Check if the funciton is loaded properly
         // and if it is callable
         if (pFunc && PyCallable_Check(pFunc)) {
-            DEBUG_PRINT("Calling function %s from class %s[%d].", func , class, instance_id);
+            LF_PRINT_DEBUG("Calling function %s from class %s[%d].", func , class, instance_id);
             Py_INCREF(pFunc);
             /* Release the thread. No Python API allowed beyond this point. */
             PyGILState_Release(gstate);
@@ -669,7 +669,7 @@ get_python_function(string module, string class, int instance_id, string func) {
         error_print("Failed to load \"%s\".", module);
     }
     
-    DEBUG_PRINT("Done with start().");
+    LF_PRINT_DEBUG("Done with start().");
 
     Py_INCREF(Py_None);
     /* Release the thread. No Python API allowed beyond this point. */
