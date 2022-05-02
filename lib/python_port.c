@@ -76,7 +76,7 @@ PyObject* py_port_set(PyObject *self, PyObject *args) {
     generic_port_instance_struct* port = 
         PyCapsule_GetPointer(p->port, "port");
     if (port == NULL) {
-        error_print("Null pointer received.");
+        lf_print_error("Null pointer received.");
         exit(1);
     }
     
@@ -183,7 +183,7 @@ PyObject *py_port_iter_next(PyObject *self) {
     generic_port_instance_struct **cport = 
         (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
     if (cport == NULL) {
-        error_print_and_exit("Null pointer received.");
+        lf_print_error_and_exit("Null pointer received.");
     }
 
     // Py_XINCREF(cport[index]->value);
@@ -246,7 +246,7 @@ PyObject *py_port_capsule_get_item(PyObject *self, PyObject *key) {
     generic_port_instance_struct **cport = 
         (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
     if (cport == NULL) {
-        error_print_and_exit("Null pointer received.");
+        lf_print_error_and_exit("Null pointer received.");
     }
 
     // Py_INCREF(cport[index]->value);
