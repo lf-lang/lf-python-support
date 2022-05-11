@@ -195,8 +195,8 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
     }
 
     Py_ssize_t argv_size = PyList_Size(py_argv_parsed);
-    argv = malloc(argv_size);
-    for (Py_ssize_t i=0; i<argv_size; i++) {
+    argv = malloc(argv_size * sizeof(char *));
+    for (Py_ssize_t i = 0; i < argv_size; i++) {
         PyObject* list_item = PyList_GetItem(py_argv_parsed, i);
         if (list_item == NULL) {
             if (PyErr_Occurred()) {
@@ -219,9 +219,8 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
             PyErr_Print();
             lf_print_error_and_exit("Could not convert argv list item %u to char*.", i);
         }
-
-        *argc = argv_size;
     }
+    *argc = argv_size;
     return argv;
 }
 
