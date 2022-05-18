@@ -138,17 +138,17 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
 int lf_reactor_c_main(int argc, char *argv[]);
 
 /**
- * Prototype for request_stop().
- * @see reactor.c and reactor_threaded.c
+ * Prototype for lf_request_stop().
+ * @see reactor.h
  */
-void request_stop();
+void lf_request_stop();
 
 ///////////////// Other useful functions /////////////////////
 /**
  * Stop execution at the conclusion of the current logical time.
  */
 static PyObject* py_request_stop(PyObject *self, PyObject *args) {
-    request_stop();
+    lf_request_stop();
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -437,6 +437,7 @@ PyObject* convert_C_port_to_py(void* port, int width) {
     // Fill in the Python port struct
     ((generic_port_capsule_struct*)cap)->port = capsule;
     ((generic_port_capsule_struct*)cap)->width = width;
+    FEDERATED_ASSIGN_FIELDS(((generic_port_capsule_struct*)cap), cport);
 
     if (width == -2) {
         ((generic_port_capsule_struct*)cap)->is_present = 
@@ -504,6 +505,7 @@ PyObject* convert_C_action_to_py(void* action) {
     // Fill in the Python action struct
     ((generic_action_capsule_struct*)cap)->action = capsule;
     ((generic_action_capsule_struct*)cap)->is_present = trigger->status;
+    FEDERATED_ASSIGN_FIELDS(((generic_port_capsule_struct*)cap), ((generic_action_instance_struct*)action));
 
     // If token is not initialized, that is all we need to set
     if (trigger->token == NULL) {
