@@ -46,7 +46,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define FEDERATED_CAPSULE_MEMBER \
     {"intended_tag", T_OBJECT, offsetof(generic_port_capsule_struct, intended_tag), READONLY, "Original intended tag of the event."}, \
-    {"physical_time_of_arrival", T_INT, offsetof(generic_port_capsule_struct, physical_time_of_arrival), READONLY, "Physical time of arrival of the original message."},
+    {"physical_time_of_arrival", T_LONG, offsetof(generic_port_capsule_struct, physical_time_of_arrival), READONLY, "Physical time of arrival of the original message."},
 
 #define FEDERATED_ASSIGN_FIELDS(py_port, c_port) \
 do { \
