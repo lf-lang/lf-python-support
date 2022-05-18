@@ -56,8 +56,9 @@ do { \
 
 #else // FEDERATED_CENTRALIZED
 #define FEDERATED_GENERIC_EXTENSION \
-#define FEDERATED_CAPSULE_EXTENSION \
     instant_t physical_time_of_arrival;
+
+#define FEDERATED_CAPSULE_EXTENSION FEDERATED_GENERIC_EXTENSION
 
 #define FEDERATED_CAPSULE_MEMBER \
     {"physical_time_of_arrival", T_INT, offsetof(generic_port_capsule_struct, physical_time_of_arrival), READONLY, "Physical time of arrival of the original message."},
