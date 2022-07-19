@@ -52,8 +52,10 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *                   connections to destinations.
  **/
 typedef struct {
+	bool is_present;
+	lf_sparse_io_record_t* sparse_record; // NULL if there is no sparse record.
+	int destination_channel;              // -1 if there is no destination.
     PyObject* value;
-    bool is_present;
     int num_destinations;
     lf_token_t* token;
     int length;
