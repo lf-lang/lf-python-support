@@ -1,7 +1,7 @@
 /**
  * @file
  * @author Soroush Bateni (soroush@utdallas.edu)
- * @autohr Hou Seng Wong (housengw@berkeley.edu)
+ * @author Hou Seng Wong (housengw@berkeley.edu)
  *
  * @section LICENSE
 Copyright (c) 2022, The University of California at Berkeley.
@@ -41,10 +41,6 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "modal_models/definitions.h"
 
 //////////// schedule Function(s) /////////////
-/**
- * Prototype for the internal API. @see reactor_common.c
- **/
-lf_token_t* _lf_initialize_token_with_value(lf_token_t* token, void* value, size_t length);
 
 /**
  * Prototype for API function. @see lib/core/reactor_common.c

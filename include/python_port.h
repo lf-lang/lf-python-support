@@ -37,6 +37,8 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Python.h>
 #include <structmember.h>
 #include "python_capsule_extension.h"
+#include <stdbool.h>
+#include "include/core/reactor.h"
 
 /**
  * The struct used to instantiate a port
