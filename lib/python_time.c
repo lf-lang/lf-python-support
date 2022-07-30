@@ -32,71 +32,36 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <Python.h>
 #include <structmember.h>
-#include "include/core/tag.c"
+
+#include "core/tag.h"
 
 ///////// Time-keeping functions //////////
-/** 
+/**
  * Return the logical time in nanoseconds.
  */
 PyObject* py_lf_time_logical(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(_lf_time(LF_LOGICAL));
 }
 
-/** 
- * Return the logical time in nanoseconds.
- * @deprecated
- */
-PyObject* py_get_logical_time(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_logical_time() is deprecated. Use lf.time.logical() instead", 1);
-    return py_lf_time_logical(self, args);
-}
-
-/** 
+/**
  * Return the elapsed logical time in nanoseconds.
  */
 PyObject* py_lf_time_logical_elapsed(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(_lf_time(LF_ELAPSED_LOGICAL));
 }
 
-/** 
- * Return the elapsed logical time in nanoseconds.
- * @deprecated
- */
-PyObject* py_get_elapsed_logical_time(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_logical_time() is deprecated. Use lf.time.logical_elapsed() instead", 1);
-    return py_lf_time_logical_elapsed(self, args);
-}
-
-/** 
+/**
  * Return the physical time in nanoseconds.
  */
 PyObject* py_lf_time_physical(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(_lf_time(LF_PHYSICAL));
 }
 
-/** 
- * Return the physical time in nanoseconds.
- * @deprecated
- */
-PyObject* py_get_physical_time(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_physical_time() is deprecated. Use lf.time.physical() instead", 1);
-    return py_lf_time_physical(self, args);
-}
-
-/** 
+/**
  * Return the elapsed physical time in nanoseconds.
  */
 PyObject* py_lf_time_physical_elapsed(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(_lf_time(LF_ELAPSED_PHYSICAL));
-}
-
-/** 
- * Return the elapsed physical time in nanoseconds.
- * @deprecated
- */
-PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_elapsed_physical_time() is deprecated. Use lf.time.physical_elapsed() instead", 1);
-    return py_lf_time_physical_elapsed(self, args);
 }
 
 /**
@@ -104,23 +69,6 @@ PyObject* py_get_elapsed_physical_time(PyObject *self, PyObject *args) {
  */
 PyObject* py_lf_time_start(PyObject *self, PyObject *args) {
     return PyLong_FromLongLong(_lf_time(LF_START));
-}
-
-/**
- * Return the start time in nanoseconds.
- * @deprecated
- */
-PyObject* py_get_start_time(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_start_time() is deprecated. Use lf.time.start() instead", 1);
-    return py_lf_time_start(self, args);
-}
-
-/**
- * Return the current microstep.
- */
-PyObject* py_get_microstep(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_microstep() is deprecated. Use lf.tag().microstep instead", 1);
-    return PyLong_FromUnsignedLong(lf_tag().microstep);
 }
 
 PyTypeObject PyTimeType;
@@ -135,7 +83,7 @@ PyMethodDef PyTimeTypeMethods[] = {
 };
 
 /**
- * Definition of the PyTagType Object. 
+ * Definition of the PyTimeType Object.
  **/
 PyTypeObject PyTimeType = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -147,6 +95,3 @@ PyTypeObject PyTimeType = {
     .tp_new = PyType_GenericNew,
     .tp_methods = PyTimeTypeMethods,
 };
-
-
-

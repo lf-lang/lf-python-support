@@ -30,28 +30,20 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "python_tag.h"
+#include "python_port.h"
 
 PyTypeObject PyTagType;
 
-/** 
+/**
  * Return the current tag object.
  */
-static PyObject* py_lf_tag(PyObject *self, PyObject *args) {
+PyObject* py_lf_tag(PyObject *self, PyObject *args) {
     py_tag_t *t = (py_tag_t *) PyType_GenericNew(&PyTagType, NULL, NULL);
     if (t == NULL) {
         return NULL;
     }
     t->tag = lf_tag();
     return (PyObject *) t;
-}
-
-/** 
- * Return the current tag object.
- * @deprecated
- */
-static PyObject* py_get_current_tag(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "get_current_tag() is deprecated. Use lf.tag() instead", 1);
-    return py_lf_tag(self, args);
 }
 
 /**
@@ -69,8 +61,8 @@ PyObject* py_tag_compare(PyObject *self, PyObject *args) {
     PyObject *tag2;
     if (!PyArg_UnpackTuple(args, "args", 2, 2, &tag1, &tag2)) {
         return NULL;
-    } 
-    if (!PyObject_IsInstance(tag1, (PyObject *) &PyTagType) 
+    }
+    if (!PyObject_IsInstance(tag1, (PyObject *) &PyTagType)
      || !PyObject_IsInstance(tag2, (PyObject *) &PyTagType)) {
         PyErr_SetString(PyExc_TypeError, "Arguments must be Tag type.");
         return NULL;
@@ -82,23 +74,14 @@ PyObject* py_tag_compare(PyObject *self, PyObject *args) {
 
 
 /**
- * @deprecated version of "py_tag_compare"
- */
-PyObject* py_compare_tags(PyObject *self, PyObject *args) {
-    PyErr_WarnEx(PyExc_DeprecationWarning, "compare_tags() is deprecated. Use lf.tag_compare() instead", 1);
-    return py_tag_compare(self, args);
-}
-
-
-/**
- * Initialize the Tag object with the given values for "time" and "microstep", 
+ * Initialize the Tag object with the given values for "time" and "microstep",
  * both of which are required.
  * @param self A py_tag_t object.
  * @param args The arguments are:
  *      - time: A logical time.
  *      - microstep: A microstep within the logical time "time".
  */
-int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
+static int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
     static char *kwlist[] = {"time", "microstep", NULL};
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "Lk", kwlist, &(self->tag.time), &(self->tag.microstep))) {
         return -1;
@@ -108,12 +91,12 @@ int Tag_init(py_tag_t *self, PyObject *args, PyObject *kwds) {
 
 /**
  * Rich compare function for Tag objects. Used in .tp_richcompare.
- * 
+ *
  * @param self A py_tag_t object on the left side of the operator.
  * @param other A py_tag_t object on the right side of the operator.
  * @param op the comparison operator
  */
-PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
+static PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
     if (!PyObject_IsInstance(other, (PyObject *) &PyTagType)) {
         PyErr_SetString(PyExc_TypeError, "Cannot compare a Tag with a non-Tag type.");
         return NULL;
@@ -147,14 +130,14 @@ PyObject *Tag_richcompare(py_tag_t *self, PyObject *other, int op) {
 /**
  * Tag getter for the "time" attribute
  **/
-PyObject* Tag_get_time(py_tag_t *self, void *closure) {
+static PyObject* Tag_get_time(py_tag_t *self, void *closure) {
     return PyLong_FromLongLong(self->tag.time);
 }
 
 /**
  * Tag getter for the "microstep" attribute
  **/
-PyObject* Tag_get_microstep(py_tag_t *self, void *closure) {
+static PyObject* Tag_get_microstep(py_tag_t *self, void *closure) {
     return PyLong_FromUnsignedLong(self->tag.microstep);
 }
 
@@ -167,14 +150,14 @@ PyObject* Tag_get_microstep(py_tag_t *self, void *closure) {
  * >>> t.microstep  # calls Tag_get_microstep.
  * >>> t.time = 1  # illegal since setters are omitted.
  **/
-PyGetSetDef Tag_getsetters[] = {
+static PyGetSetDef Tag_getsetters[] = {
     {"time", (getter) Tag_get_time},
     {"microstep", (getter) Tag_get_microstep},
     {NULL}  /* Sentinel */
 };
 
 /**
- * Definition of the PyTagType Object. 
+ * Definition of the PyTagType Object.
  **/
 PyTypeObject PyTagType = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -191,7 +174,7 @@ PyTypeObject PyTagType = {
 
 /**
  * @brief Convert C tag to `py_tag_t`
- * 
+ *
  * @param c_tag The tag in C.
  * @return PyObject* The tag in Python.
  */

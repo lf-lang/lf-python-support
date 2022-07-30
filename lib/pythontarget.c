@@ -32,13 +32,27 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "pythontarget.h"
-#include "python_tag.c"
-#include "python_port.c"
-#include "python_action.c"
-#include "python_time.c"
+#include "python_tag.h"
+#include "python_port.h"
+#include "python_action.h"
+#include "python_time.h"
 #include "core/utils/util.h"
 #include "core/tag.h"
 #include "modal_models/definitions.h"
+
+////////////// Global variables ///////////////
+// The global Python object that holds the .py module that the
+// C runtime interacts with
+PyObject *globalPythonModule = NULL;
+
+// The dictionary of the Python module that is used to load
+// class objects from
+PyObject *globalPythonModuleDict = NULL;
+
+
+// Import pickle to enable native serialization
+static PyObject* global_pickler = NULL;
+
 
 //////////// schedule Function(s) /////////////
 
@@ -60,14 +74,14 @@ trigger_t* _lf_action_to_trigger(void* action);
  *      - action: Pointer to an action on the self struct.
  *      - offset: The time offset over and above that in the action.
  **/
-static PyObject* py_schedule(PyObject *self, PyObject *args) {
+PyObject* py_schedule(PyObject *self, PyObject *args) {
     generic_action_capsule_struct* act = (generic_action_capsule_struct*)self;
     long long offset;
     PyObject* value = NULL;
 
     if (!PyArg_ParseTuple(args, "L|O", &offset, &value))
         return NULL;
-    
+
     void* action = PyCapsule_GetPointer(act->action,"action");
     if (action == NULL) {
         lf_print_error("Null pointer received.");
@@ -89,7 +103,7 @@ static PyObject* py_schedule(PyObject *self, PyObject *args) {
         act->value = value;
     }
 
-    
+
     // Pass the token along
     _lf_schedule_token(action, offset, t);
 
@@ -105,7 +119,7 @@ static PyObject* py_schedule(PyObject *self, PyObject *args) {
  * with a copy of the specified value.
  * See reactor.h for documentation.
  */
-static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
+PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
     generic_action_capsule_struct* act;
     long long offset;
     PyObject* value;
@@ -119,7 +133,7 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
         lf_print_error("Null pointer received.");
         exit(1);
     }
-    
+
     _lf_schedule_copy(action, offset, value, length);
 
     // FIXME: handle is not passed to the Python side
@@ -143,21 +157,21 @@ void lf_request_stop();
 /**
  * Stop execution at the conclusion of the current logical time.
  */
-static PyObject* py_request_stop(PyObject *self, PyObject *args) {
+PyObject* py_request_stop(PyObject *self, PyObject *args) {
     lf_request_stop();
-    
+
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 /**
- * Parse Python's 'argv' (from sys.argv()) into a pair of C-style 
- * 'argc' (the size of command-line parameters array) 
+ * Parse Python's 'argv' (from sys.argv()) into a pair of C-style
+ * 'argc' (the size of command-line parameters array)
  * and 'argv' (an array of char* containing the command-line parameters).
- * 
+ *
  * This function assumes that argc is already allocated, and will fail if it
  * isn't.
- * 
+ *
  * @param py_argv The returned value by 'sys.argv()'
  * @param argc Will contain an integer which is the number of arguments
  *  passed on the command line.
@@ -224,11 +238,11 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
 ///////////// Main function callable from Python code
 /**
  * The main function of this Python module.
- * 
+ *
  * @param py_args A single object, which should be a list
  *  of arguments taken from sys.argv().
  */
-static PyObject* py_main(PyObject* self, PyObject* py_args) {
+PyObject* py_main(PyObject* self, PyObject* py_args) {
 
     LF_PRINT_DEBUG("Initializing main.");
 
@@ -278,15 +292,13 @@ static PyObject* py_main(PyObject* self, PyObject* py_args) {
 static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"start", py_main, METH_VARARGS, NULL},
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
-  {"get_logical_time", py_get_logical_time, METH_NOARGS, NULL},
-  {"get_elapsed_logical_time", py_get_elapsed_logical_time, METH_NOARGS, NULL},
-  {"get_physical_time", py_get_physical_time, METH_NOARGS, NULL},
-  {"get_elapsed_physical_time", py_get_elapsed_physical_time, METH_NOARGS, NULL},
-  {"get_start_time", py_get_start_time, METH_NOARGS, NULL},
+  {"get_logical_time", py_lf_time_logical, METH_NOARGS, NULL},
+  {"get_elapsed_logical_time", py_lf_time_logical_elapsed, METH_NOARGS, NULL},
+  {"get_physical_time", py_lf_time_physical, METH_NOARGS, NULL},
+  {"get_elapsed_physical_time", py_lf_time_physical_elapsed, METH_NOARGS, NULL},
+  {"get_start_time", py_lf_time_start, METH_NOARGS, NULL},
   {"tag", py_lf_tag, METH_NOARGS, NULL},
-  {"get_current_tag", py_get_current_tag, METH_NOARGS, NULL},
-  {"get_microstep", py_get_microstep, METH_NOARGS, NULL},
-  {"compare_tags", py_compare_tags, METH_VARARGS, NULL},
+  {"lf_tag", py_lf_tag, METH_NOARGS, NULL},
   {"tag_compare", py_tag_compare, METH_VARARGS, NULL},
   {"request_stop", py_request_stop, METH_NOARGS, NULL},
   {NULL, NULL, 0, NULL}
@@ -400,13 +412,13 @@ void destroy_action_capsule(PyObject* capsule) {
  * A function that is called any time a Python reaction is called with
  * ports as inputs and outputs. This function converts ports that are
  * either a multiport or a non-multiport into a port_capsule.
- * 
+ *
  * First, the void* pointer is stored in a PyCapsule. If the port is not
  * a multiport, the value and is_present fields are copied verbatim. These
  * feilds then can be accessed from the Python code as port.value and
  * port.is_present.
  * If the value is absent, it will be set to None.
- * 
+ *
  * For multiports, the value of the port_capsule (i.e., port.value) is always
  * set to None and is_present is set to false.
  * Individual ports can then later be accessed in Python code as port[idx].
@@ -418,7 +430,7 @@ PyObject* convert_C_port_to_py(void* port, int width) {
         cport = (generic_port_instance_struct *)port;
     }
     // Create the port struct in Python
-    PyObject* cap = 
+    PyObject* cap =
         (PyObject*)PyObject_GC_New(generic_port_capsule_struct, &py_port_capsule_t);
     if (cap == NULL) {
         lf_print_error_and_exit("Failed to convert port.");
@@ -436,7 +448,7 @@ PyObject* convert_C_port_to_py(void* port, int width) {
     FEDERATED_ASSIGN_FIELDS(((generic_port_capsule_struct*)cap), cport);
 
     if (width == -2) {
-        ((generic_port_capsule_struct*)cap)->is_present = 
+        ((generic_port_capsule_struct*)cap)->is_present =
             cport->is_present;
 
 
@@ -465,21 +477,21 @@ PyObject* convert_C_port_to_py(void* port, int width) {
  * @see xtext/org.icyphy.linguafranca/src/org/icyphy/generator/CGenerator.xtend for details about C actions
  * Python actions have the following fields (for more informatino @see generic_action_capsule_struct):
  *   PyObject_HEAD
- *   PyObject* action;   
- *   PyObject* value; 
- *   bool is_present; 
- *   
- * The input to this function is a pointer to a C action, which might or 
+ *   PyObject* action;
+ *   PyObject* value;
+ *   bool is_present;
+ *
+ * The input to this function is a pointer to a C action, which might or
  * might not contain a value and an is_present field. To simplify the assumptions
  * made by this function, the "value" and "is_present" are passed to the function
  * instead of expecting them to exist.
- * 
+ *
  * The void* pointer to the C action instance is encapsulated in a PyCapsule instead of passing an exposed pointer through
  * Python. @see https://docs.python.org/3/c-api/capsule.html
- * This encapsulation is done by calling PyCapsule_New(action, "name_of_the_container_in_the_capsule", NULL), 
- * where "name_of_the_container_in_the_capsule" is an agreed-upon container name inside the capsule. This 
- * capsule can then be treated as a PyObject* and safely passed through Python code. On the other end 
- * (which is in schedule functions), PyCapsule_GetPointer(received_action,"action") can be called to retrieve 
+ * This encapsulation is done by calling PyCapsule_New(action, "name_of_the_container_in_the_capsule", NULL),
+ * where "name_of_the_container_in_the_capsule" is an agreed-upon container name inside the capsule. This
+ * capsule can then be treated as a PyObject* and safely passed through Python code. On the other end
+ * (which is in schedule functions), PyCapsule_GetPointer(received_action,"action") can be called to retrieve
  * the void* pointer into received_action.
  **/
 PyObject* convert_C_action_to_py(void* action) {
@@ -522,15 +534,15 @@ PyObject* convert_C_action_to_py(void* action) {
     return cap;
 }
 
-/** 
+/**
  * Invoke a Python func in class[instance_id] from module.
- * Class instances in generated Python code are always instantiated in a 
- * list of template classs[_class(params), _class(params), ...] (note the extra s) regardless 
+ * Class instances in generated Python code are always instantiated in a
+ * list of template classs[_class(params), _class(params), ...] (note the extra s) regardless
  * of whether a bank is used or not. If there is no bank, or a bank of width 1, the list will be
  * instantiated as classs[_class(params)].
- * 
+ *
  * This function would thus call classs[0] to access the first instance in a bank and so on.
- * 
+ *
  * Possible optimizations include: - Not loading the module each time (by storing it in global memory),
  *                                 - Keeping a persistent argument table
  * @param module The Python module to load the function from. In embedded mode, it should
@@ -564,10 +576,10 @@ get_python_function(string module, string class, int instance_id, string func) {
     gstate = PyGILState_Ensure();
 
     // If the Python module is already loaded, skip this.
-    if (globalPythonModule == NULL) {    
+    if (globalPythonModule == NULL) {
         // Decode the MODULE name into a filesystem compatible string
         pFileName = PyUnicode_DecodeFSDefault(module);
-        
+
         // Set the Python search path to be the current working directory
         char cwd[PATH_MAX];
         if ( getcwd(cwd, sizeof(cwd)) == NULL) {
@@ -660,12 +672,12 @@ get_python_function(string module, string class, int instance_id, string func) {
             lf_print_error("Function %s was not found or is not callable.", func);
         }
         Py_XDECREF(pFunc);
-        Py_DECREF(globalPythonModule); 
+        Py_DECREF(globalPythonModule);
     } else {
         PyErr_Print();
         lf_print_error("Failed to load \"%s\".", module);
     }
-    
+
     LF_PRINT_DEBUG("Done with start().");
 
     Py_INCREF(Py_None);

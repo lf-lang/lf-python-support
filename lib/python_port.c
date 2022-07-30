@@ -31,6 +31,9 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Implementation of functions defined in @see pythontarget.h
  */
 
+#include <stddef.h>
+#include <Python.h>
+
 #include "python_port.h"
 
 PyTypeObject py_port_capsule_t;
@@ -39,23 +42,23 @@ PyTypeObject py_port_capsule_t;
 /**
  * Set the value and is_present field of self which is of type
  * LinguaFranca.port_capsule
- * 
- * Each LinguaFranca.port_capsule includes a void* pointer of 
+ *
+ * Each LinguaFranca.port_capsule includes a void* pointer of
  * the C port (a.k.a. generic_port_instance_struct*).
  * @see generic_port_capsule_struct in pythontarget.h
- * 
+ *
  * This function calls the underlying _LF_SET API.
  * @see xtext/org.icyphy.linguafranca/src/lib/core/reactor.h
- * 
+ *
  * This function can be used to set any type of PyObject ranging from
  * primitive types to complex lists and tuples. Moreover, this function
  * is callable from Python target code by using port_name.out(value)
- * 
+ *
  * Some examples include
  *  port_name.out("Hello")
  *  port_name.out(5)
  *  port_name.out(["Hello", 5 , (2.8, "X")])
- * 
+ *
  * The port type given in the Lingua Franca is only used as a "suggestion"
  * as per Python's duck typing principles. The end-user is responsible for
  * appropriately handling types on the recieveing end of this port.
@@ -73,13 +76,13 @@ PyObject* py_port_set(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-    generic_port_instance_struct* port = 
+    generic_port_instance_struct* port =
         PyCapsule_GetPointer(p->port, "port");
     if (port == NULL) {
         lf_print_error("Null pointer received.");
         exit(1);
     }
-    
+
     if (val) {
         LF_PRINT_DEBUG("Setting value %p.", val);
         Py_XDECREF(port->value);
@@ -88,7 +91,7 @@ PyObject* py_port_set(PyObject *self, PyObject *args) {
         _LF_SET(port, val);
 
         Py_INCREF(val);
-        // Also set the values for the port capsule.      
+        // Also set the values for the port capsule.
         p->value = val;
         p->is_present = true;
     }
@@ -111,9 +114,9 @@ void py_port_capsule_dealloc(generic_port_capsule_struct *self) {
 /**
  * Create a new port_capsule. Note that a LinguaFranca.port_capsule PyObject
  * follows the same structure as the @see generic_port_capsule_struct.
- * 
- * To initialize the port_capsule, this function first initializes a 
- * generic_port_capsule_struct* self using the tp_alloc property of 
+ *
+ * To initialize the port_capsule, this function first initializes a
+ * generic_port_capsule_struct* self using the tp_alloc property of
  * port_capsule (@see py_port_capsule_t) and then assigns the members
  * of self with default values of port= NULL, value = NULL, is_present = false,
  * current_index = 0, width = -2.
@@ -145,7 +148,7 @@ PyObject *py_port_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kwds
 /**
  * Return an iterator for self, which is a port.
  * This function just have to exist to tell Python that ports are iterable.
- * 
+ *
  * For example to make
  *     for p in foo_multiport:
  *         p.set(42)
@@ -160,7 +163,7 @@ PyObject *py_port_iter(PyObject *self) {
 
 /**
  * The function that is responsible for getting the next item in the iterator for a multiport.
- * 
+ *
  * This would make the following code possible in the Python target:
  *     for p in foo_multiport:
  *         p.set(42)
@@ -180,7 +183,7 @@ PyObject *py_port_iter_next(PyObject *self) {
         return NULL;
     }
 
-    generic_port_instance_struct **cport = 
+    generic_port_instance_struct **cport =
         (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
     if (cport == NULL) {
         lf_print_error_and_exit("Null pointer received.");
@@ -232,7 +235,7 @@ PyObject *py_port_capsule_get_item(PyObject *self, PyObject *key) {
         return NULL;
     }
 
-    generic_port_capsule_struct* pyport = 
+    generic_port_capsule_struct* pyport =
         (generic_port_capsule_struct*)self->ob_type->tp_new(self->ob_type, NULL, NULL);
     long long index = -3;
 
@@ -244,7 +247,7 @@ PyObject *py_port_capsule_get_item(PyObject *self, PyObject *key) {
         return NULL;
     }
 
-    generic_port_instance_struct **cport = 
+    generic_port_instance_struct **cport =
         (generic_port_instance_struct **)PyCapsule_GetPointer(port->port,"port");
     if (cport == NULL) {
         lf_print_error_and_exit("Null pointer received.");
@@ -260,7 +263,7 @@ PyObject *py_port_capsule_get_item(PyObject *self, PyObject *key) {
 
     LF_PRINT_LOG("Getting item index %d. Is present is %d.", index, pyport->is_present);
 
-    
+
     if (pyport->value == NULL) {
         Py_INCREF(Py_None);
         pyport->value = Py_None;
@@ -289,7 +292,7 @@ int py_port_capsule_assign_get_item(PyObject *self, PyObject *item, PyObject* va
 /**
  * A function that allows the invocation of len() on a port.
  * @param self A port of type LinguaFranca.port_capsule
- */ 
+ */
 Py_ssize_t py_port_length(PyObject *self) {
     generic_port_capsule_struct* port = (generic_port_capsule_struct*)self;
     LF_PRINT_DEBUG("Getting the length, which is %d.", port->width);
@@ -299,8 +302,8 @@ Py_ssize_t py_port_length(PyObject *self) {
 /**
  * Methods that convert a LinguaFranca.port_capsule into a mapping,
  * which allows it to be subscriptble.
- */ 
-PyMappingMethods py_port_as_mapping = {    
+ */
+PyMappingMethods py_port_as_mapping = {
     (lenfunc) py_port_length,
     (binaryfunc) py_port_capsule_get_item,
     (objobjargproc) py_port_capsule_assign_get_item
@@ -310,7 +313,7 @@ PyMappingMethods py_port_as_mapping = {
  * Initialize the port capsule self with the given optional values for
  * port, value, is_present, and num_destinations. If any of these arguments
  * are missing, the default values are assigned
- * @see port_intance_new 
+ * @see port_intance_new
  * @param self The port_instance PyObject that follows
  *              the generic_port_instance_struct* internal structure
  * @param args The optional arguments that are:

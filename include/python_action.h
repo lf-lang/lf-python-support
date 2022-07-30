@@ -38,12 +38,14 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <structmember.h>
 #include <stdbool.h>
 #include "python_capsule_extension.h"
-#include "include/core/reactor.h"
+#include "core/reactor.h"
 #include "pythontarget.h"
+
+extern PyTypeObject py_action_capsule_t;
 
 /**
  * The struct used to instantiate an action.
- * This is used 
+ * This is used
  * in the PythonGenerator instead of redefining
  * a struct for each action.
  * This can be used for any Python object,
@@ -64,15 +66,15 @@ typedef struct {
 /**
  * The struct used to hold an action
  * that is sent to a Python reaction.
- * 
+ *
  * The "action" field holds a PyCapsule of the
  * void * pointer to an action.
- * 
+ *
  * The "value" field holds the action value
  * if anything is given. This value is copied over
  * from action->value each time an action is passed
  * to a Python reaction.
- * 
+ *
  * The "is_present" field is copied over
  * from action->value each time an action is passed
  * to a Python reaction.

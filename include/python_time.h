@@ -1,9 +1,11 @@
 /**
  * @file
+ * @author Soroush Bateni (soroush@utdallas.edu)
  * @autohr Hou Seng Wong (housengw@berkeley.edu)
  *
  * @section LICENSE
 Copyright (c) 2022, The University of California at Berkeley.
+Copyright (c) 2021, The University of Texas at Dallas.
 
 Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -29,32 +31,14 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Implementation of functions defined in @see pythontarget.h
  */
 
-#ifndef PYTHON_TAG_H
-#define PYTHON_TAG_H
-#include <Python.h>
-#include <structmember.h>
-#include "core/tag.h"
+///////// Time-keeping functions //////////
+PyObject* py_lf_time_logical(PyObject *self, PyObject *args);
+PyObject* py_lf_time_logical_elapsed(PyObject *self, PyObject *args);
+PyObject* py_lf_time_physical(PyObject *self, PyObject *args);
+PyObject* py_lf_time_physical_elapsed(PyObject *self, PyObject *args);
+PyObject* py_lf_time_start(PyObject *self, PyObject *args);
 
-extern PyTypeObject PyTagType;
+extern PyTypeObject PyTimeType;
 
-/**
- * Python wrapper for the tag_t struct in the C target.
- **/
-typedef struct {
-    PyObject_HEAD
-    tag_t tag;
-} py_tag_t;
-
-/**
- * @brief Convert C tag to `py_tag_t`
- *
- * @param c_tag The tag in C.
- * @return py_tag_t* The tag in Python.
- */
-py_tag_t* convert_C_tag_to_py(tag_t c_tag);
-
-PyObject* py_lf_tag(PyObject *self, PyObject *args);
-PyObject* py_tag_compare(PyObject *self, PyObject *args);
-py_tag_t* convert_C_tag_to_py(tag_t c_tag);
-
-#endif
+extern PyMethodDef PyTimeTypeMethods[];
+extern PyTypeObject PyTimeType;
