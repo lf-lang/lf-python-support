@@ -172,6 +172,27 @@ PyGetSetDef Tag_getsetters[] = {
     {"microstep", (getter) Tag_get_microstep},
     {NULL}  /* Sentinel */
 };
+/**
+ * String representation for Tag object
+ **/
+PyObject *Tag_str(PyObject *self) {
+    // Get PyLong representation of the "time" attribute. 
+    PyObject *time = Tag_get_time(self, NULL);
+    // Get PyLong representation of the "microstep" attribute. 
+    PyObject *microstep = Tag_get_microstep(self, NULL);
+
+    // Create the tag's string representation
+    PyObject *str = PyUnicode_FromFormat(
+        "Tag(time=%U, microstep=%U)",
+        PyObject_Str(time),
+        PyObject_Str(microstep) 
+    ); 
+    
+    Py_DECREF(time);
+    Py_DECREF(microstep);
+
+    return str;
+}
 
 /**
  * Definition of the PyTagType Object. 
@@ -187,6 +208,7 @@ PyTypeObject PyTagType = {
     .tp_init = (initproc) Tag_init,
     .tp_richcompare = (richcmpfunc) Tag_richcompare,
     .tp_getset = Tag_getsetters,
+    .tp_str = Tag_str,
 };
 
 /**
