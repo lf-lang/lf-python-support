@@ -30,7 +30,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Implementation of modal models support in the Python target.
  */
 
-#include "definitions.h"
+#include "modal_models/definitions.h"
 
 //////////// set Function /////////////
 
@@ -89,7 +89,7 @@ static PyTypeObject mode_capsule_t = {
 
 /**
  * @brief Initialize `mode_capsule_t` in the `current_module`.
- * 
+ *
  */
 void initialize_mode_capsule_t(PyObject* current_module) {
     // Initialize the mode_capsule type

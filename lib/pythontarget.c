@@ -289,7 +289,6 @@ static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"start", py_main, METH_VARARGS, NULL},
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
   {"tag", py_lf_tag, METH_NOARGS, NULL},
-  {"lf_tag", py_lf_tag, METH_NOARGS, NULL},
   {"tag_compare", py_tag_compare, METH_VARARGS, NULL},
   {"request_stop", py_request_stop, METH_NOARGS, NULL},
   {NULL, NULL, 0, NULL}
