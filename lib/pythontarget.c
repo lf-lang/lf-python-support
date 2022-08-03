@@ -51,7 +51,7 @@ PyObject *globalPythonModuleDict = NULL;
 
 
 // Import pickle to enable native serialization
-static PyObject* global_pickler = NULL;
+PyObject* global_pickler = NULL;
 
 
 //////////// schedule Function(s) /////////////
@@ -283,20 +283,11 @@ PyObject* py_main(PyObject* self, PyObject* py_args) {
  * be called Foo_methods.
  * start() initiates the main loop in the C core library
  * @see schedule_copy
- * @see get_elapsed_logical_time
- * @see get_logical_time
- * @see get_physical_time
- * @see get_elapsed_physical_time
  * @see request_stop
  */
 static PyMethodDef GEN_NAME(MODULE_NAME,_methods)[] = {
   {"start", py_main, METH_VARARGS, NULL},
   {"schedule_copy", py_schedule_copy, METH_VARARGS, NULL},
-  {"get_logical_time", py_lf_time_logical, METH_NOARGS, NULL},
-  {"get_elapsed_logical_time", py_lf_time_logical_elapsed, METH_NOARGS, NULL},
-  {"get_physical_time", py_lf_time_physical, METH_NOARGS, NULL},
-  {"get_elapsed_physical_time", py_lf_time_physical_elapsed, METH_NOARGS, NULL},
-  {"get_start_time", py_lf_time_start, METH_NOARGS, NULL},
   {"tag", py_lf_tag, METH_NOARGS, NULL},
   {"lf_tag", py_lf_tag, METH_NOARGS, NULL},
   {"tag_compare", py_tag_compare, METH_VARARGS, NULL},
