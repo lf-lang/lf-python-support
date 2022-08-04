@@ -33,7 +33,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Python.h>
 #include <structmember.h>
 
-#include "core/tag.h"
+#include "tag.h"
 
 ///////// Time-keeping functions //////////
 /**

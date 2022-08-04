@@ -33,7 +33,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PYTHON_TAG_H
 #include <Python.h>
 #include <structmember.h>
-#include "core/tag.h"
+#include "tag.h"
 
 extern PyTypeObject PyTagType;
 

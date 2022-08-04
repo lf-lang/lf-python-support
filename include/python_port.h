@@ -39,7 +39,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 
 #include "python_capsule_extension.h"
-#include "core/reactor.h"
+#include "lf_types.h"
 #include "python_action.h"
 
 extern PyTypeObject py_port_capsule_t;

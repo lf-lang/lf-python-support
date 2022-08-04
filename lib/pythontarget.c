@@ -36,8 +36,8 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "python_port.h"
 #include "python_action.h"
 #include "python_time.h"
-#include "core/utils/util.h"
-#include "core/tag.h"
+#include "util.h"
+#include "tag.h"
 #include "modal_models/definitions.h"
 
 ////////////// Global variables ///////////////

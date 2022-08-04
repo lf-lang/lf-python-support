@@ -38,7 +38,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <structmember.h>
 #include <stdbool.h>
 #include "python_capsule_extension.h"
-#include "core/reactor.h"
+#include "lf_types.h"
 #include "pythontarget.h"
 
 extern PyTypeObject py_action_capsule_t;
