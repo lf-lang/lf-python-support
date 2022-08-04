@@ -35,6 +35,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Python.h>
 
 #include "python_port.h"
+#include "reactor.h"
 
 PyTypeObject py_port_capsule_t;
 

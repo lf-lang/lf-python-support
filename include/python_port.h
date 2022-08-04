@@ -40,6 +40,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "python_capsule_extension.h"
 #include "lf_types.h"
+#include "port.h"
 #include "python_action.h"
 
 extern PyTypeObject py_port_capsule_t;
