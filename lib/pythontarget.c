@@ -31,14 +31,16 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Implementation of functions defined in @see pythontarget.h
  */
 
-#include "pythontarget.h"
-#include "python_tag.h"
-#include "python_port.h"
-#include "python_action.h"
-#include "python_time.h"
-#include "util.h"
-#include "tag.h"
 #include "modal_models/definitions.h"
+#include "python_action.h"
+#include "python_port.h"
+#include "python_tag.h"
+#include "python_time.h"
+#include "pythontarget.h"
+#include "reactor_common.h"
+#include "reactor.h"
+#include "tag.h"
+#include "util.h"
 
 ////////////// Global variables ///////////////
 // The global Python object that holds the .py module that the
