@@ -31,6 +31,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "modal_models/definitions.h"
+#include "util.h"
 
 //////////// set Function /////////////
 
@@ -138,5 +139,5 @@ PyObject* convert_C_mode_to_py(
 
     cap->change_type = change_type;
 
-	return cap;
+	return (PyObject*) cap;
 }
