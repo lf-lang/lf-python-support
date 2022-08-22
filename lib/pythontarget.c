@@ -135,7 +135,7 @@ static PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
 /**
  * Prototype for the main function.
  */
-int lf_reactor_c_main(int argc, char *argv[]);
+int lf_reactor_c_main(int argc, const char *argv[]);
 
 /**
  * Prototype for lf_request_stop().
@@ -237,7 +237,7 @@ static PyObject* py_main(PyObject* self, PyObject* py_args) {
     LF_PRINT_DEBUG("Initializing main.");
 
     size_t argc;
-    char** argv = _lf_py_parse_argv_impl(py_args, &argc);
+    const char** argv = _lf_py_parse_argv_impl(py_args, &argc);
 
     // Initialize the Python interpreter
     Py_Initialize();
