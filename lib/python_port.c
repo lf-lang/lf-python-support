@@ -378,7 +378,7 @@ PyMemberDef py_port_capsule_members[] = {
 PyMethodDef py_port_capsule_methods[] = {
     {"__getitem__", (PyCFunction)py_port_capsule_get_item, METH_O|METH_COEXIST, "x.__getitem__(y) <==> x[y]"},
     {"set", (PyCFunction)py_port_set, METH_VARARGS, "Set value of the port as well as the is_present field"},
-    {NULL}  /* Sentinel */
+    {NULL, NULL, 0, NULL}  /* Sentinel */
 };
 
 
