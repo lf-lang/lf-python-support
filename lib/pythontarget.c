@@ -323,6 +323,7 @@ static PyModuleDef MODULE_NAME = {
 PyMODINIT_FUNC
 GEN_NAME(PyInit_,MODULE_NAME)(void) {
     PyObject *m;
+    Py_Initialize();
 
     // Initialize the port_capsule type
     if (PyType_Ready(&py_port_capsule_t) < 0) {
