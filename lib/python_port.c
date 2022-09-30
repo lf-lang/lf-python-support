@@ -387,7 +387,7 @@ PyMethodDef py_port_capsule_methods[] = {
  * used to describe how port_capsule behaves.
  */
 PyTypeObject py_port_capsule_t = {
-    PyVarObject_HEAD_INIT(NULL, 0)
+    PyVarObject_HEAD_INIT(&PyType_Type, 0)
     .tp_name = "LinguaFranca.port_capsule",
     .tp_doc = "port_capsule objects",
     .tp_basicsize = sizeof(generic_port_capsule_struct),
