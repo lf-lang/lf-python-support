@@ -252,7 +252,7 @@ PyObject* py_main(PyObject* self, PyObject* py_args) {
     char** argv = _lf_py_parse_argv_impl(py_args, &argc);
 
     // Initialize the Python interpreter
-    Py_Initialize();
+    // Py_Initialize();
 
     // Load the pickle module
     if (global_pickler == NULL) {
