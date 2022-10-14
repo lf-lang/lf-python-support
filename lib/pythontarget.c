@@ -324,6 +324,7 @@ PyMODINIT_FUNC
 GEN_NAME(PyInit_,MODULE_NAME)(void) {
 
     PyGILState_STATE gstate = PyGILState_Ensure();
+    PyEval_InitThreads();
 
     Py_Initialize();
 
