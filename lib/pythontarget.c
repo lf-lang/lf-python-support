@@ -323,10 +323,10 @@ static PyModuleDef MODULE_NAME = {
 PyMODINIT_FUNC
 GEN_NAME(PyInit_,MODULE_NAME)(void) {
 
+    Py_Initialize();
+
     PyGILState_STATE gstate = PyGILState_Ensure();
     PyEval_InitThreads();
-
-    Py_Initialize();
 
     PyObject *m;
 
