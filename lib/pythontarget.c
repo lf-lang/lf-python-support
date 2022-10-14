@@ -322,6 +322,11 @@ static PyModuleDef MODULE_NAME = {
  */
 PyMODINIT_FUNC
 GEN_NAME(PyInit_,MODULE_NAME)(void) {
+
+    PyGILState_STATE gstate = PyGILState_Ensure();
+
+    Py_Initialize();
+
     PyObject *m;
 
     // Initialize the port_capsule type
@@ -384,7 +389,7 @@ GEN_NAME(PyInit_,MODULE_NAME)(void) {
         Py_DECREF(m);
         return NULL;
     }
-
+    PyGILState_Release(gstate);
     return m;
 }
 
