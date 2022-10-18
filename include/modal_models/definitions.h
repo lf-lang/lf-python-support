@@ -37,7 +37,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifdef MODAL_REACTORS
 #include <Python.h>
 #include <structmember.h>
-#include "../include/ctarget/ctarget.h"
+#include "../include/api/api.h"
 
 /**
  * The struct used to represent modes in Python.
@@ -70,12 +70,12 @@ PyObject* convert_C_mode_to_py(
 
 /**
  * @brief Initialize `mode_capsule_t` in the `current_module`.
- * 
+ *
  */
 void initialize_mode_capsule_t(PyObject* current_module);
 
-#else 
-#define initialize_mode_capsule_t(...) 
+#else
+#define initialize_mode_capsule_t(...)
 #endif // MODAL_REACTORS
 
 #endif // PYTHON_MODAL_MODELS_DEFS_H

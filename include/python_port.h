@@ -36,11 +36,18 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <Python.h>
 #include <structmember.h>
+#include <stdbool.h>
+
 #include "python_capsule_extension.h"
+#include "lf_types.h"
+#include "port.h"
+#include "python_action.h"
+
+extern PyTypeObject py_port_capsule_t;
 
 /**
  * The struct used to instantiate a port
- * in Lingua Franca. This is used 
+ * in Lingua Franca. This is used
  * in the PythonGenerator instead of redefining
  * a struct for each port.
  * This can be used for any Python object,
@@ -52,9 +59,9 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *                   connections to destinations.
  **/
 typedef struct {
-	bool is_present;
-	lf_sparse_io_record_t* sparse_record; // NULL if there is no sparse record.
-	int destination_channel;              // -1 if there is no destination.
+    bool is_present;
+    lf_sparse_io_record_t* sparse_record; // NULL if there is no sparse record.
+    int destination_channel;              // -1 if there is no destination.
     PyObject* value;
     int num_destinations;
     lf_token_t* token;
@@ -66,12 +73,12 @@ typedef struct {
 
 
 /**
- * The struct used to represent ports in Python 
+ * The struct used to represent ports in Python
  * This template is used as a blueprint to create
  * Python objects that follow the same structure.
- * The resulting Python object will have the type 
+ * The resulting Python object will have the type
  * py_port_capsule_t in C (LinguaFranca.port_capsule in Python).
- * 
+ *
  * port: A PyCapsule (https://docs.python.org/3/c-api/capsule.html)
  *       that safely holds a C void* inside a Python object. This capsule
  *       is passed through the Python code and is extracted in C functions
@@ -79,7 +86,7 @@ typedef struct {
  * value: The value of the port at the time of invocation of @see convert_C_port_to_py.
  *        The value and is_present are copied from the port if it is not a multiport and can be accessed as
  *        port.value. For multiports, is_present will be false and value will be None. The value of each individual
- *        port can be accessed as port[idx].value (@see port_capsule_get_item). 
+ *        port can be accessed as port[idx].value (@see port_capsule_get_item).
  *        Subsequent calls to set will also need to update the value and is_present fields so that they are reflected
  *        in Python code.
  * is_present: Indicates if the value of the singular port is present

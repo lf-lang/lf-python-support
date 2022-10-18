@@ -31,6 +31,8 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Implementation of functions defined in @see pythontarget.h
  */
 
+#include <Python.h>
+
 #include "python_action.h"
 
 PyTypeObject py_action_capsule_t;
@@ -50,7 +52,7 @@ void py_action_capsule_dealloc(generic_action_capsule_struct *self) {
 /**
  * Called when an action in Python is to be created. Note that LinguaFranca.action_capsule
  * follows the same structure as the @see generic_action_capsule_struct.
- * 
+ *
  * To initialize the action_capsule, this function first calls the tp_alloc
  * method of type py_action_capsule_t and then assign default values of NULL, NULL, 0
  * to the members of the generic_action_capsule_struct.
@@ -70,8 +72,8 @@ PyObject *py_action_capsule_new(PyTypeObject *type, PyObject *args, PyObject *kw
  * Initialize the action capsule "self" with the given optional values for
  * action (void *), value (PyObject*), and is_present (bool). If any of these arguments
  * are missing, the default values are assigned.
- * 
- * @see port_intance_new 
+ *
+ * @see port_intance_new
  * @param self The port_instance PyObject that follows
  *              the generic_port_instance_struct* internal structure
  * @param args The optional arguments that are:
