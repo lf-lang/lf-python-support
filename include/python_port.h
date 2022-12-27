@@ -55,19 +55,17 @@ extern PyTypeObject py_port_capsule_t;
  * PyObject* value: the value of the port with the generic Python type
  * is_present: indicates if the value of the port is present
  *             at the current logical time
- * num_destinations: used for reference counting the number of
- *                   connections to destinations.
- **/
+ */
 typedef struct {
+	size_t element_size;
+    void (*destructor) (void* value);
+    void* (*copy_constructor) (void* value);
+    lf_token_t* token;
     bool is_present;
     lf_sparse_io_record_t* sparse_record; // NULL if there is no sparse record.
     int destination_channel;              // -1 if there is no destination.
+    int num_destinations;				  // Number of destination reactors.
     PyObject* value;
-    int num_destinations;
-    lf_token_t* token;
-    int length;
-    void (*destructor) (void* value);
-    void* (*copy_constructor) (void* value);
     FEDERATED_GENERIC_EXTENSION
 } generic_port_instance_struct;
 
