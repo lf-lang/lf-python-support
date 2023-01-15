@@ -94,11 +94,11 @@ PyObject* py_schedule(PyObject *self, PyObject *args) {
     lf_token_t* t = NULL;
 
     // Check to see if value exists and token is not NULL
-    if (value && (trigger->token != NULL)) {
+    if (value && (trigger->tmplt.token != NULL)) {
         // DEBUG: adjust the element_size (might not be necessary)
-        trigger->token->element_size = sizeof(PyObject*);
-        trigger->element_size = sizeof(PyObject*);
-        t = _lf_initialize_token_with_value(trigger->token, value, 1);
+        trigger->tmplt.token->type->element_size = sizeof(PyObject*);
+        trigger->tmplt.type.element_size = sizeof(PyObject*);
+        t = _lf_initialize_token_with_value(&trigger->tmplt, value, 1);
 
         // Also give the new value back to the Python action itself
         Py_INCREF(value);
@@ -508,20 +508,20 @@ PyObject* convert_C_action_to_py(void* action) {
     FEDERATED_ASSIGN_FIELDS(((generic_port_capsule_struct*)cap), ((generic_action_instance_struct*)action));
 
     // If token is not initialized, that is all we need to set
-    if (trigger->token == NULL) {
+    if (trigger->tmplt.token == NULL) {
         Py_INCREF(Py_None);
         ((generic_action_capsule_struct*)cap)->value = Py_None;
         return cap;
     }
 
     // Default value is None
-    if (trigger->token->value == NULL) {
+    if (trigger->tmplt.token->value == NULL) {
         Py_INCREF(Py_None);
-        trigger->token->value = Py_None;
+        trigger->tmplt.token->value = Py_None;
     }
 
     // Actions in Python always use token type
-    ((generic_action_capsule_struct*)cap)->value = trigger->token->value;
+    ((generic_action_capsule_struct*)cap)->value = trigger->tmplt.token->value;
 
     return cap;
 }
