@@ -46,29 +46,27 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern PyTypeObject py_port_capsule_t;
 
 /**
- * The struct used to instantiate a port
- * in Lingua Franca. This is used
- * in the PythonGenerator instead of redefining
- * a struct for each port.
- * This can be used for any Python object,
- * including lists and tuples.
- * PyObject* value: the value of the port with the generic Python type
- * is_present: indicates if the value of the port is present
- *             at the current logical time
+ * The struct used to instantiate a port in Lingua Franca. This is used
+ * in the PythonGenerator instead of redefining a struct for each port.
+ * This can be used for any Python object, including lists and tuples.
+ * PyObject* value is the value of the port with the generic Python type.
+ * NOTE: The structure here must follow exactly that of lf_port_base_t,
+ * which includes as its first element a token_template_t, which includes
+ * as its first element a token_type_t.
  */
 typedef struct {
-	size_t element_size;
-    void (*destructor) (void* value);
-    void* (*copy_constructor) (void* value);
-    lf_token_t* token;
-    bool is_present;
-    lf_sparse_io_record_t* sparse_record; // NULL if there is no sparse record.
-    int destination_channel;              // -1 if there is no destination.
-    int num_destinations;				  // Number of destination reactors.
+    size_t element_size;                     // token_type_t
+    void (*destructor) (void* value);        // token_type_t
+    void* (*copy_constructor) (void* value); // token_type_t
+    lf_token_t* token;                       // token_template_t
+    size_t length;                           // token_template_t
+    bool is_present;                         // lf_port_base_t
+    lf_sparse_io_record_t* sparse_record;    // lf_port_base_t
+    int destination_channel;                 // lf_port_base_t
+    int num_destinations;                    // lf_port_base_t
     PyObject* value;
     FEDERATED_GENERIC_EXTENSION
 } generic_port_instance_struct;
-
 
 /**
  * The struct used to represent ports in Python
