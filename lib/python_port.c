@@ -262,7 +262,7 @@ PyObject *py_port_capsule_get_item(PyObject *self, PyObject *key) {
     FEDERATED_ASSIGN_FIELDS(pyport, cport[index]);
 
 
-    LF_PRINT_LOG("Getting item index %lld. Is present is %d.", index, pyport->is_present);
+    LF_PRINT_LOG("Getting item index %d. Is present is %d.", index, pyport->is_present);
 
 
     if (pyport->value == NULL) {

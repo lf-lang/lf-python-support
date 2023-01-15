@@ -55,13 +55,11 @@ extern PyTypeObject py_action_capsule_t;
  *             at the current logical time
  **/
 typedef struct {
-	token_type_t type;
-	lf_token_t* token;
-    size_t length;
-    bool is_present;
-    bool has_value;
     trigger_t* trigger;
     PyObject* value;
+    bool is_present;
+    bool has_value;
+    lf_token_t* token;
     FEDERATED_GENERIC_EXTENSION
 } generic_action_instance_struct;
 
