@@ -483,7 +483,7 @@ PyObject* convert_C_port_to_py(void* port, int width) {
  **/
 PyObject* convert_C_action_to_py(void* action) {
     // Convert to trigger_t
-    trigger_t* trigger = (trigger_t*)action;
+    trigger_t* trigger = ((lf_action_base_t*)action)->trigger;
 
     // Create the action struct in Python
     PyObject* cap = (PyObject*)PyObject_GC_New(generic_action_capsule_struct, &py_action_capsule_t);
