@@ -79,13 +79,13 @@ PyObject* py_schedule(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "L|O", &offset, &value))
         return NULL;
 
-    void* action = PyCapsule_GetPointer(act->action,"action");
+    lf_action_base_t* action = (lf_action_base_t*)PyCapsule_GetPointer(act->action,"action");
     if (action == NULL) {
         lf_print_error("Null pointer received.");
         exit(1);
     }
 
-    trigger_t* trigger = (trigger_t*)action;
+    trigger_t* trigger = action->trigger;
     lf_token_t* t = NULL;
 
     // Check to see if value exists and token is not NULL
@@ -125,7 +125,7 @@ PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "OLOi" ,&act, &offset, &value, &length))
         return NULL;
 
-    void* action = PyCapsule_GetPointer(act->action,"action");
+    lf_action_base_t* action = (lf_action_base_t*)PyCapsule_GetPointer(act->action,"action");
     if (action == NULL) {
         lf_print_error("Null pointer received.");
         exit(1);
