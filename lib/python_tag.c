@@ -161,9 +161,9 @@ static PyGetSetDef Tag_getsetters[] = {
  **/
 PyObject *Tag_str(PyObject *self) {
     // Get PyLong representation of the "time" attribute. 
-    PyObject *time = Tag_get_time(self, NULL);
+    PyObject *time = Tag_get_time((py_tag_t*)self, NULL);
     // Get PyLong representation of the "microstep" attribute. 
-    PyObject *microstep = Tag_get_microstep(self, NULL);
+    PyObject *microstep = Tag_get_microstep((py_tag_t*)self, NULL);
 
     // Create the tag's string representation
     PyObject *str = PyUnicode_FromFormat(

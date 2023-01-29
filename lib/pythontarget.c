@@ -59,11 +59,6 @@ PyObject* global_pickler = NULL;
 //////////// schedule Function(s) /////////////
 
 /**
- * Prototype for API function. @see lib/core/reactor_common.c
- **/
-trigger_t* _lf_action_to_trigger(void* action);
-
-/**
  * Schedule an action to occur with the specified time offset
  * with no payload (no value conveyed). This function is callable
  * in Python by calling action_name.schedule(offset).
@@ -84,21 +79,21 @@ PyObject* py_schedule(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "L|O", &offset, &value))
         return NULL;
 
-    void* action = PyCapsule_GetPointer(act->action,"action");
+    lf_action_base_t* action = (lf_action_base_t*)PyCapsule_GetPointer(act->action,"action");
     if (action == NULL) {
         lf_print_error("Null pointer received.");
         exit(1);
     }
 
-    trigger_t* trigger = _lf_action_to_trigger(action);
+    trigger_t* trigger = action->trigger;
     lf_token_t* t = NULL;
 
     // Check to see if value exists and token is not NULL
-    if (value && (trigger->token != NULL)) {
+    if (value && (trigger->tmplt.token != NULL)) {
         // DEBUG: adjust the element_size (might not be necessary)
-        trigger->token->element_size = sizeof(PyObject*);
-        trigger->element_size = sizeof(PyObject*);
-        t = _lf_initialize_token_with_value(trigger->token, value, 1);
+        trigger->tmplt.token->type->element_size = sizeof(PyObject*);
+        trigger->tmplt.type.element_size = sizeof(PyObject*);
+        t = _lf_initialize_token_with_value(&trigger->tmplt, value, 1);
 
         // Also give the new value back to the Python action itself
         Py_INCREF(value);
@@ -130,7 +125,7 @@ PyObject* py_schedule_copy(PyObject *self, PyObject *args) {
     if (!PyArg_ParseTuple(args, "OLOi" ,&act, &offset, &value, &length))
         return NULL;
 
-    void* action = PyCapsule_GetPointer(act->action,"action");
+    lf_action_base_t* action = (lf_action_base_t*)PyCapsule_GetPointer(act->action,"action");
     if (action == NULL) {
         lf_print_error("Null pointer received.");
         exit(1);
@@ -180,13 +175,13 @@ PyObject* py_request_stop(PyObject *self, PyObject *args) {
  * @return A list of char*, where each item contains an individual
  *  command-line argument.
  */
-char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
+const char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
     if (argc == NULL) {
         lf_print_error_and_exit("_lf_py_parse_argv_impl called with an unallocated argc argument.");
     }
 
     // List of arguments
-    char** argv;
+    const char** argv;
 
     // Read the optional argvs
     PyObject* py_argv_parsed = NULL;
@@ -214,7 +209,7 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
             if (PyErr_Occurred()) {
                 PyErr_Print();
             }
-            lf_print_error_and_exit("Could not get argv list item %u.", i);
+            lf_print_error_and_exit("Could not get argv list item %zd.", i);
         }
 
         PyObject *encoded_string = PyUnicode_AsEncodedString(list_item, "UTF-8", "strict");
@@ -222,14 +217,14 @@ char** _lf_py_parse_argv_impl(PyObject* py_argv, size_t* argc) {
             if (PyErr_Occurred()) {
                 PyErr_Print();
             }
-            lf_print_error_and_exit("Failed to encode argv list item %u.", i);
+            lf_print_error_and_exit("Failed to encode argv list item %zd.", i);
         }
 
         argv[i] = PyBytes_AsString(encoded_string);
 
         if (PyErr_Occurred()) {
             PyErr_Print();
-            lf_print_error_and_exit("Could not convert argv list item %u to char*.", i);
+            lf_print_error_and_exit("Could not convert argv list item %zd to char*.", i);
         }
     }
     *argc = argv_size;
@@ -488,7 +483,7 @@ PyObject* convert_C_port_to_py(void* port, int width) {
  **/
 PyObject* convert_C_action_to_py(void* action) {
     // Convert to trigger_t
-    trigger_t* trigger = _lf_action_to_trigger(action);
+    trigger_t* trigger = ((lf_action_base_t*)action)->trigger;
 
     // Create the action struct in Python
     PyObject* cap = (PyObject*)PyObject_GC_New(generic_action_capsule_struct, &py_action_capsule_t);
@@ -508,20 +503,20 @@ PyObject* convert_C_action_to_py(void* action) {
     FEDERATED_ASSIGN_FIELDS(((generic_port_capsule_struct*)cap), ((generic_action_instance_struct*)action));
 
     // If token is not initialized, that is all we need to set
-    if (trigger->token == NULL) {
+    if (trigger->tmplt.token == NULL) {
         Py_INCREF(Py_None);
         ((generic_action_capsule_struct*)cap)->value = Py_None;
         return cap;
     }
 
     // Default value is None
-    if (trigger->token->value == NULL) {
+    if (trigger->tmplt.token->value == NULL) {
         Py_INCREF(Py_None);
-        trigger->token->value = Py_None;
+        trigger->tmplt.token->value = Py_None;
     }
 
     // Actions in Python always use token type
-    ((generic_action_capsule_struct*)cap)->value = trigger->token->value;
+    ((generic_action_capsule_struct*)cap)->value = trigger->tmplt.token->value;
 
     return cap;
 }
