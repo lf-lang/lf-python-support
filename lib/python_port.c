@@ -101,6 +101,43 @@ PyObject* py_port_set(PyObject *self, PyObject *args) {
     return Py_None;
 }
 
+
+/**
+ * Set only the is_present field of self which is of type
+ * LinguaFranca.port_capsule
+ *
+ * Each LinguaFranca.port_capsule includes a void* pointer of
+ * the C port (a.k.a. generic_port_instance_struct*).
+ * @see generic_port_capsule_struct in pythontarget.h
+ *
+ * This function calls the underlying lf_set_present API.
+ * @see xtext/org.icyphy.linguafranca/src/lib/core/reactor.h
+ *
+ * @param self The output port (by name) or input of a contained
+ *                 reactor in form instance_name.port_name.
+ * @param args not used
+ */
+PyObject* py_port_set_present(PyObject *self, PyObject *args) {
+    generic_port_capsule_struct* p = (generic_port_capsule_struct*)self;
+
+    generic_port_instance_struct* port =
+        PyCapsule_GetPointer(p->port, "port");
+    if (port == NULL) {
+        lf_print_error("Null pointer received.");
+        exit(1);
+    }
+
+    LF_PRINT_DEBUG("Setting port present.");
+    // Call the core lib API to set the port
+    lf_set_present(port);
+
+    // Also set the values for the port capsule.
+    p->is_present = true;
+
+    Py_INCREF(Py_None);
+    return Py_None;
+}
+
 /**
  * Called when a port_capsule has to be deallocated (generally by the Python
  * garbage collector).
@@ -378,6 +415,7 @@ PyMemberDef py_port_capsule_members[] = {
 PyMethodDef py_port_capsule_methods[] = {
     {"__getitem__", (PyCFunction)py_port_capsule_get_item, METH_O|METH_COEXIST, "x.__getitem__(y) <==> x[y]"},
     {"set", (PyCFunction)py_port_set, METH_VARARGS, "Set value of the port as well as the is_present field"},
+    {"set_present", (PyCFunction)py_port_set_present, METH_VARARGS, "Set the is_present field of the port"},
     {NULL}  /* Sentinel */
 };
 
