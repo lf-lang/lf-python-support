@@ -59,6 +59,10 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define PATH_MAX MAX_PATH
 #endif
 #endif
+// For some reason, on Windows, this still ends up undefined.
+#ifndef PATH_MAX
+#define PATH_MAX 1024
+#endif
 
 // MODULE_NAME is expected to be defined in the main file of the generated code
 #ifndef MODULE_NAME
