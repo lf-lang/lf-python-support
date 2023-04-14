@@ -32,6 +32,7 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "modal_models/definitions.h"
+#include "platform.h"  // defines MAX_PATH on Windows
 #include "python_action.h"
 #include "python_port.h"
 #include "python_tag.h"

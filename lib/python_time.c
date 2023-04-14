@@ -40,35 +40,35 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Return the logical time in nanoseconds.
  */
 PyObject* py_lf_time_logical(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_LOGICAL));
+    return PyLong_FromLongLong(lf_time_logical());
 }
 
 /**
  * Return the elapsed logical time in nanoseconds.
  */
 PyObject* py_lf_time_logical_elapsed(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_ELAPSED_LOGICAL));
+    return PyLong_FromLongLong(lf_time_logical_elapsed());
 }
 
 /**
  * Return the physical time in nanoseconds.
  */
 PyObject* py_lf_time_physical(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_PHYSICAL));
+    return PyLong_FromLongLong(lf_time_physical());
 }
 
 /**
  * Return the elapsed physical time in nanoseconds.
  */
 PyObject* py_lf_time_physical_elapsed(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_ELAPSED_PHYSICAL));
+    return PyLong_FromLongLong(lf_time_physical_elapsed());
 }
 
 /**
  * Return the start time in nanoseconds.
  */
 PyObject* py_lf_time_start(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_START));
+    return PyLong_FromLongLong(lf_time_start());
 }
 
 PyTypeObject PyTimeType;
