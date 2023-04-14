@@ -53,7 +53,8 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "python_port.h"
 #include "python_action.h"
 
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #ifndef PATH_MAX
 #define PATH_MAX MAX_PATH
 #endif
