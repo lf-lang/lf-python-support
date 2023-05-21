@@ -6,7 +6,7 @@ setup(
     description = 'Useful notations and helper functions used in Lingua Franca programs.',
     author= 'Soroush Bateni',
     author_email="soroosh129@gmail.com",
-    url="https://github.com/icyphy/lingua-franca",
+    url="https://github.com/lf-lang/lf-python-support",
     packages = ['LinguaFrancaBase'],
     python_requires='>=3.4',
 )
