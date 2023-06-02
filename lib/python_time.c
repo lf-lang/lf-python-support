@@ -33,42 +33,44 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <Python.h>
 #include <structmember.h>
 
+#include "python_port.h"
 #include "tag.h"
+
 
 ///////// Time-keeping functions //////////
 /**
  * Return the logical time in nanoseconds.
  */
 PyObject* py_lf_time_logical(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_LOGICAL));
+    return PyLong_FromLongLong(lf_time_logical(global_environment));
 }
 
 /**
  * Return the elapsed logical time in nanoseconds.
  */
 PyObject* py_lf_time_logical_elapsed(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_ELAPSED_LOGICAL));
+    return PyLong_FromLongLong(lf_time_logical_elapsed(global_environment));
 }
 
 /**
  * Return the physical time in nanoseconds.
  */
 PyObject* py_lf_time_physical(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_PHYSICAL));
+    return PyLong_FromLongLong(lf_time_physical());
 }
 
 /**
  * Return the elapsed physical time in nanoseconds.
  */
 PyObject* py_lf_time_physical_elapsed(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_ELAPSED_PHYSICAL));
+    return PyLong_FromLongLong(lf_time_physical_elapsed());
 }
 
 /**
  * Return the start time in nanoseconds.
  */
 PyObject* py_lf_time_start(PyObject *self, PyObject *args) {
-    return PyLong_FromLongLong(_lf_time(LF_START));
+    return PyLong_FromLongLong(lf_time_start());
 }
 
 PyTypeObject PyTimeType;

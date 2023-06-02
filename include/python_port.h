@@ -45,6 +45,10 @@ THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 extern PyTypeObject py_port_capsule_t;
 
+// Python target only supports LF programs with a single enclave.
+// The pointer to the environment of this enclave is global
+extern environment_t* global_environment;
+
 /**
  * The struct used to instantiate a port in Lingua Franca. This is used
  * in the PythonGenerator instead of redefining a struct for each port.
@@ -61,9 +65,7 @@ typedef struct {
     lf_token_t* token;                       // token_template_t
     size_t length;                           // token_template_t
     bool is_present;                         // lf_port_base_t
-    lf_sparse_io_record_t* sparse_record;    // lf_port_base_t
-    int destination_channel;                 // lf_port_base_t
-    int num_destinations;                    // lf_port_base_t
+    lf_port_internal_t _base;                // lf_port_internal_t
     PyObject* value;
     FEDERATED_GENERIC_EXTENSION
 } generic_port_instance_struct;
