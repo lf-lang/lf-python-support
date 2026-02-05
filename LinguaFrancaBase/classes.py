@@ -27,3 +27,14 @@ class ReactorBase:
         # This idiom is used to invoke C functions bound to the main module and defined
         # pythontarget.c.
         return self.lf_module().check_deadline(self, invoke_deadline_handler)
+    def update_deadline(self, updated_deadline=0):
+        """
+        Update the deadline of the currently executing reaction.
+        
+        Args:
+            invoke_deadline_handler (interval_t): The updated deadline.
+        """        
+        # Call the C function through the binding.
+        # This idiom is used to invoke C functions bound to the main module and defined
+        # pythontarget.c.
+        return self.lf_module().update_deadline(self, updated_deadline)
