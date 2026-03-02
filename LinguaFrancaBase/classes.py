@@ -27,3 +27,32 @@ class ReactorBase:
         # This idiom is used to invoke C functions bound to the main module and defined
         # pythontarget.c.
         return self.lf_module().check_deadline(self, invoke_deadline_handler)
+
+    def register_user_trace_event(self, description: str):
+        """Register a user trace event for tracing. Enable tracing in the target (e.g. tracing: True).
+        
+        Args:
+            description: Human-readable description of the event.
+            
+        Returns:
+            int: An opaque handle to pass to tracepoint_user_event and tracepoint_user_value.
+                 Returns 0 if tracing is disabled or registration failed.
+        """
+        return self.lf_module().register_user_trace_event(self, description)
+
+    def tracepoint_user_event(self, description_or_handle):
+        """Record a user-defined trace event at the current logical time.
+        
+        Args:
+            description_or_handle: The handle returned by register_user_trace_event(self, description).
+        """
+        self.lf_module().tracepoint_user_event(self, description_or_handle)
+
+    def tracepoint_user_value(self, description_or_handle, value):
+        """Record a user-defined trace event with a value at the current logical time.
+        
+        Args:
+            description_or_handle: The handle returned by register_user_trace_event(self, description).
+            value: Integer value to record (e.g. a count or timestamp).
+        """
+        self.lf_module().tracepoint_user_value(self, description_or_handle, value)
