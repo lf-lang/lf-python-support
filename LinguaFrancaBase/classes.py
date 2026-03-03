@@ -40,19 +40,19 @@ class ReactorBase:
         """
         return self.lf_module().register_user_trace_event(self, description)
 
-    def tracepoint_user_event(self, description_or_handle):
+    def tracepoint_user_event(self, handle):
         """Record a user-defined trace event at the current logical time.
         
         Args:
-            description_or_handle: The handle returned by register_user_trace_event(self, description).
+            handle: The handle returned by register_user_trace_event(description).
         """
-        self.lf_module().tracepoint_user_event(self, description_or_handle)
+        self.lf_module().tracepoint_user_event(self, handle)
 
-    def tracepoint_user_value(self, description_or_handle, value):
+    def tracepoint_user_value(self, handle, value):
         """Record a user-defined trace event with a value at the current logical time.
         
         Args:
-            description_or_handle: The handle returned by register_user_trace_event(self, description).
+            handle: The handle returned by register_user_trace_event(description).
             value: Integer value to record (e.g. a count or timestamp).
         """
-        self.lf_module().tracepoint_user_value(self, description_or_handle, value)
+        self.lf_module().tracepoint_user_value(self, handle, value)
