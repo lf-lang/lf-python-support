@@ -28,6 +28,18 @@ class ReactorBase:
         # pythontarget.c.
         return self.lf_module().check_deadline(self, invoke_deadline_handler)
 
+    def update_deadline(self, updated_deadline=0):
+        """
+        Update the deadline of the currently executing reaction.
+        
+        Args:
+            updated_deadline (interval_t): The updated deadline.
+        """        
+        # Call the C function through the binding.
+        # This idiom is used to invoke C functions bound to the main module and defined
+        # pythontarget.c.
+        return self.lf_module().update_deadline(self, updated_deadline)
+
     def register_user_trace_event(self, description: str):
         """Register a user trace event for tracing. Enable tracing in the target (e.g. tracing: True).
         
