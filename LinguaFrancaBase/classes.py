@@ -68,3 +68,62 @@ class ReactorBase:
             value: Integer value to record (e.g. a count or timestamp).
         """
         self.lf_module().tracepoint_user_value(self, handle, value)
+
+    def lf_async(self, action, function, *args):
+        """Invoke a Python callable without blocking the rest of the program.
+
+        ``function(*args)`` runs while this reaction is suspended, and this method
+        returns whatever ``function`` returns. Outputs set before the call are
+        produced at the current tag. The rest of the reaction runs at the tag where
+        ``lf_async_resume(action)`` is called.
+
+        The calling reaction must list ``action`` as an effect, and a reaction
+        declared earlier in this reactor must be triggered by ``action`` and call
+        ``lf_async_resume``. A physical action is scheduled when ``function``
+        returns. A logical action is scheduled before ``function`` runs, after the
+        action's minimum delay.
+
+        Other reactions of this reactor can run, and can modify state, while this
+        call is suspended. The reactor's reactions are mutually exclusive. If the
+        program is already stopping, ``function`` runs directly and this returns
+        at the current tag.
+        """
+        return self.lf_module().lf_async(self, action, function, args)
+
+    def lf_async_resume(self, action):
+        """Resume the oldest ``lf_async`` call waiting on ``action``.
+
+        Call this from the reaction triggered by ``action``. If that call's
+        function has not returned, this waits for it, so the suspended reaction
+        continues at this tag. If nothing is waiting, this does nothing.
+        """
+        return self.lf_module().lf_async_resume(action)
+
+    def lf_await(self, port):
+        """Suspend this reaction until ``lf_await_resume(port)`` is called.
+
+        Outputs set before the call are produced at the current tag. The rest of
+        the reaction runs at the tag of the resuming call, and ``port.value`` and
+        ``port.is_present`` then reflect the port at that tag. If the program
+        stops first, this returns at the stop tag.
+        """
+        return self.lf_module().lf_await(self, port)
+
+    def lf_await_resume(self, port):
+        """Resume every ``lf_await`` on ``port`` in this reactor, oldest first.
+
+        If nothing is waiting on ``port``, this does nothing.
+        """
+        return self.lf_module().lf_await_resume(self, port)
+
+    def lf_add_worker_thread(self):
+        """Add a worker thread to the pool. Returns 0 on success, or -1."""
+        return self.lf_module().lf_add_worker_thread(self)
+
+    def lf_added_worker_thread_count(self):
+        """Return the number of worker threads added at runtime."""
+        return self.lf_module().lf_added_worker_thread_count(self)
+
+    def lf_thread_id(self):
+        """Return the id of the worker thread executing the caller."""
+        return self.lf_module().lf_thread_id()
