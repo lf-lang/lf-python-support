@@ -91,7 +91,7 @@ class ReactorBase:
         return self.lf_module().lf_async(self, action, function, args)
 
     def lf_async_resume(self, action):
-        """Resume the oldest ``lf_async`` call waiting on ``action``.
+        """Resume every due ``lf_async`` call waiting on ``action``.
 
         Call this from the reaction triggered by ``action``. If that call's
         function has not returned, this waits for it, so the suspended reaction
