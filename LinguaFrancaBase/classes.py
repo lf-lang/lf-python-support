@@ -74,14 +74,12 @@ class ReactorBase:
 
         ``function(*args)`` runs while this reaction is suspended, and this method
         returns whatever ``function`` returns. Outputs set before the call are
-        produced at the current tag. The rest of the reaction runs at the tag where
-        ``lf_async_resume(action)`` is called.
+        produced at the current tag. The rest of the reaction runs at the tag of the
+        event of ``action``, which resumes the call automatically.
 
-        The calling reaction must list ``action`` as an effect, and a reaction
-        declared earlier in this reactor must be triggered by ``action`` and call
-        ``lf_async_resume``. A physical action is scheduled when ``function``
-        returns. A logical action is scheduled before ``function`` runs, after the
-        action's minimum delay.
+        The calling reaction must list ``action`` as an effect. A physical action is
+        scheduled when ``function`` returns. A logical action is scheduled before
+        ``function`` runs, after the action's minimum delay.
 
         Other reactions of this reactor can run, and can modify state, while this
         call is suspended. The reactor's reactions are mutually exclusive. If the
@@ -91,29 +89,22 @@ class ReactorBase:
         return self.lf_module().lf_async(self, action, function, args)
 
     def lf_async_resume(self, action):
-        """Resume every due ``lf_async`` call waiting on ``action``.
-
-        Call this from the reaction triggered by ``action``. If that call's
-        function has not returned, this waits for it, so the suspended reaction
-        continues at this tag. If nothing is waiting, this does nothing.
-        """
+        """Do nothing. Formerly needed to resume ``lf_async`` calls, which now resume automatically."""
         return self.lf_module().lf_async_resume(action)
 
     def lf_await(self, port):
-        """Suspend this reaction until ``lf_await_resume(port)`` is called.
+        """Suspend this reaction until ``port`` is next set.
 
         Outputs set before the call are produced at the current tag. The rest of
-        the reaction runs at the tag of the resuming call, and ``port.value`` and
-        ``port.is_present`` then reflect the port at that tag. If the program
-        stops first, this returns at the stop tag.
+        the reaction runs at the tag at which ``port`` is set, and ``port.value``
+        and ``port.is_present`` then reflect the port at that tag. If the program
+        stops first, this returns at the stop tag. ``port`` must be a single input
+        port of this reactor; a multiport raises ``TypeError``.
         """
         return self.lf_module().lf_await(self, port)
 
     def lf_await_resume(self, port):
-        """Resume every ``lf_await`` on ``port`` in this reactor, oldest first.
-
-        If nothing is waiting on ``port``, this does nothing.
-        """
+        """Do nothing. Formerly needed to resume ``lf_await`` calls, which now resume automatically."""
         return self.lf_module().lf_await_resume(self, port)
 
     def lf_add_worker_thread(self):
